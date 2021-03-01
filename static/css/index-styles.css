@@ -1,0 +1,12 @@
+.content {
+  text-align: center;
+}
+
+.content a {
+  font-size: 4rem;
+}
+
+#title {
+  font-size: 8rem;
+  font-weight: 100;
+}
