@@ -25,7 +25,9 @@ class TodoList extends React.Component {
     let response = await fetch("/api/todos", {
       method: "POST",
       credentials: "same-origin",
-      body: new FormData(document.getElementById(createTodoFormId)),
+      body: new URLSearchParams(
+        new FormData(document.getElementById(createTodoFormId))
+      ),
     });
     let json = await response.json();
 
@@ -45,10 +47,12 @@ class TodoList extends React.Component {
         timeShown: 5000,
       });
     }
-  }
+  };
 
   editTodo = async (editTodoFormId, todoId) => {
-    let formData = new FormData(document.getElementById(editTodoFormId));
+    let formData = new URLSearchParams(
+      new FormData(document.getElementById(editTodoFormId))
+    );
     formData.append("todoId", todoId);
     let response = await fetch("/api/todos", {
       method: "PUT",
@@ -73,16 +77,13 @@ class TodoList extends React.Component {
         timeShown: 5000,
       });
     }
-  }
+  };
 
   updateTodoStatus = async (todoId, newTodoStatus) => {
-    let formData = new FormData();
-    formData.append("todoId", todoId);
-    formData.append("todoCompleted", newTodoStatus);
     let response = await fetch("/api/todos", {
       method: "PATCH",
       credentials: "same-origin",
-      body: formData,
+      body: new URLSearchParams({ todoId, todoCompleted: newTodoStatus }),
     });
     let json = await response.json();
 
@@ -96,15 +97,13 @@ class TodoList extends React.Component {
         timeShown: 5000,
       });
     }
-  }
+  };
 
   deleteTodo = async (todoId) => {
-    let formData = new FormData();
-    formData.append("todoId", todoId);
     let response = await fetch("/api/todos", {
       method: "DELETE",
       credentials: "same-origin",
-      body: formData,
+      body: new URLSearchParams({ todoId }),
     });
     let json = await response.json();
 
@@ -124,7 +123,7 @@ class TodoList extends React.Component {
         timeShown: 5000,
       });
     }
-  }
+  };
 
   async fetchTodos() {
     let response = await fetch("/api/todos", {

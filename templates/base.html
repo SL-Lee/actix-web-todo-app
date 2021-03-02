@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}{% endblock %} | To-do</title>
+  <link rel="stylesheet" type="text/css"
+    href="/static/css/halfmoon-variables.min.css" />
+  <link rel="stylesheet" type="text/css" href="/static/css/inter.css" />
+  <link rel="stylesheet" type="text/css" href="/static/css/iosevka-fixed.css" />
+  <link rel="stylesheet" type="text/css" href="/static/css/all.min.css" />
+  <link rel="stylesheet" type="text/css" href="/static/css/styles.css" />
+  <link rel="icon" type="image/png" href="/static/images/favicon.png" />
+</head>
+
+<body
+  class="dark-mode with-custom-webkit-scrollbars with-custom-css-scrollbars">
+  <div id="modal-root"></div>
+  <div class="page-wrapper with-navbar">
+    <!-- Navbar -->
+    <nav class="navbar">
+      <a href="/" class="navbar-brand">
+        <img src="/static/images/favicon.png" /> To-do
+      </a>
+      <ul class="navbar-nav d-none d-md-flex">
+        <li class="nav-item active">
+          <a href="/" class="nav-link">Home</a>
+        </li>
+        {% if is_logged_in %}
+        <li class="nav-item">
+          <a href="/logout" class="nav-link">Logout</a>
+        </li>
+        {% else %}
+        <li class="nav-item">
+          <a href="/signup" class="nav-link">Sign Up</a>
+        </li>
+        <li class="nav-item">
+          <a href="/login" class="nav-link">Log In</a>
+        </li>
+        {% endif %}
+      </ul>
+      <div class="navbar-content d-md-none ml-auto">
+        <div class="dropdown with-arrow">
+          <button class="btn" data-toggle="dropdown" type="button"
+            id="navbar-dropdown-toggle-btn-1"> Menu
+            <i class="fas fa-chevron-down"></i>
+          </button>
+          <div class="dropdown-menu dropdown-menu-right w-200">
+            <a href="/" class="dropdown-item text-primary">Home</a>
+            {% if is_logged_in %}
+            <a href="/logout" class="nav-link">Logout</a>
+            {% else %}
+            <a href="/signup" class="dropdown-item">Sign Up</a>
+            <a href="/login" class="dropdown-item">Log In</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-square ml-10 ml-md-auto" type="button"
+        onclick="toggleDarkMode()">
+        <i id="toggle-dark-mode-button-icon" class="fas fa-sun"></i>
+      </button>
+    </nav>
+
+    <!-- Sticky toast alerts -->
+    <div class="sticky-alerts">
+      {% if messages %}
+      {% for message in messages %}
+      <div class="alert alert-{{ message.category }}" role="alert"
+        id="alert-{{ loop.index }}">
+        <h4 class="alert-heading">{{ message.title }}</h4>
+        {{ message.content }}
+      </div>
+      {% endfor %}
+      {% endif %}
+    </div>
+
+    <!-- Content -->
+    <div class="content-wrapper">
+      <div class="page-content">
+        <div class="content">
+          {% block content %}
+          {% endblock %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="/static/js/halfmoon.min.js"></script>
+  <script src="/static/js/toggleDarkMode.js"></script>
+  <script src="/static/js/toastFlashedMessages.js"></script>
+</body>
+
+</html>
