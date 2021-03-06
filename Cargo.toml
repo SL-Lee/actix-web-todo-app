@@ -1,6 +1,6 @@
 [package]
 name = "actix-web-todo-app"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["SL-Lee <45960387+SL-Lee@users.noreply.github.com>"]
 edition = "2018"
 
@@ -14,7 +14,6 @@ chrono = "0.4.19"
 diesel = { version = "1.4.5", features = ["chrono", "r2d2", "sqlite"] }
 dotenv = "0.15.0"
 libsqlite3-sys = { version = "0.9.1", features = ["bundled"] }
-json = "0.12.4"
 rand = "0.8.3"
 rand_core = "0.6.2"
 scrypt = "0.6.3"

@@ -1,7 +1,9 @@
 use actix_identity::Identity;
-use actix_web::{delete, get, patch, post, put, web, HttpResponse, Responder};
+use actix_web::{
+    delete, get, patch, post, put, web, HttpResponse, Responder, Scope,
+};
 use diesel::prelude::*;
-use json::object;
+use serde_json::json;
 
 use crate::{
     db::{
@@ -15,8 +17,17 @@ use crate::{
     DbConnectionPool,
 };
 
+pub fn get_scope() -> Scope {
+    web::scope("/api")
+        .service(create_todo)
+        .service(get_todos)
+        .service(update_todo)
+        .service(update_todo_status)
+        .service(delete_todo)
+}
+
 #[post("/todos")]
-pub async fn create_todo(
+async fn create_todo(
     pool: DbConnectionPool,
     identity: Identity,
     data: web::Form<CreateTodoEndpointData>,
@@ -45,13 +56,11 @@ pub async fn create_todo(
     })
     .await
     .unwrap();
-    HttpResponse::Created()
-        .content_type("application/json")
-        .body(object! {status: "Success"}.dump())
+    HttpResponse::Created().json(json!({"status": "Success"}))
 }
 
 #[get("/todos")]
-pub async fn get_todos(
+async fn get_todos(
     pool: DbConnectionPool,
     identity: Identity,
 ) -> impl Responder {
@@ -74,7 +83,7 @@ pub async fn get_todos(
 }
 
 #[put("/todos")]
-pub async fn update_todo(
+async fn update_todo(
     pool: DbConnectionPool,
     identity: Identity,
     data: web::Form<UpdateTodoEndpointData>,
@@ -95,13 +104,11 @@ pub async fn update_todo(
     })
     .await
     .unwrap();
-    HttpResponse::Ok()
-        .content_type("application/json")
-        .body(object! {status: "Success"}.dump())
+    HttpResponse::Ok().json(json!({"status": "Success"}))
 }
 
 #[patch("/todos")]
-pub async fn update_todo_status(
+async fn update_todo_status(
     pool: DbConnectionPool,
     identity: Identity,
     data: web::Form<UpdateTodoStatusEndpointData>,
@@ -119,13 +126,11 @@ pub async fn update_todo_status(
     })
     .await
     .unwrap();
-    HttpResponse::Ok()
-        .content_type("application/json")
-        .body(object! {status: "Success"}.dump())
+    HttpResponse::Ok().json(json!({"status": "Success"}))
 }
 
 #[delete("/todos")]
-pub async fn delete_todo(
+async fn delete_todo(
     pool: DbConnectionPool,
     identity: Identity,
     data: web::Form<DeleteTodoEndpointData>,
@@ -142,7 +147,5 @@ pub async fn delete_todo(
     })
     .await
     .unwrap();
-    HttpResponse::Ok()
-        .content_type("application/json")
-        .body(object! {status: "Success"}.dump())
+    HttpResponse::Ok().json(json!({"status": "Success"}))
 }
