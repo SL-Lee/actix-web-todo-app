@@ -1,37 +1,13 @@
-## Welcome to GitHub Pages
+# actix-web-todo-app
 
-You can use the [editor on GitHub](https://github.com/SL-Lee/actix-web-todo-app/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
+![](https://user-images.githubusercontent.com/45960387/110206507-0d2c7900-7eb9-11eb-9472-b6fea85f6e40.png)
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+![](https://user-images.githubusercontent.com/45960387/110206450-a9a24b80-7eb8-11eb-9f2a-0d829fab7e5b.png)
 
-### Markdown
+![](https://user-images.githubusercontent.com/45960387/110206454-b0c95980-7eb8-11eb-80e9-ad5ced30bfe4.png)
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+A simple todo web application written using the following technologies/frameworks:
 
-```markdown
-Syntax highlighted code block
-
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/SL-Lee/actix-web-todo-app/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+- **actix-web** as the backend framework
+- **React** as the JavaScript frontend framework
+- **Halfmoon** as the CSS frontend framework
