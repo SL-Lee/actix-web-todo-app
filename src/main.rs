@@ -41,19 +41,19 @@ async fn index(
         return HttpResponse::Found().header("location", "/app").finish();
     }
 
-    let mut data = Context::new();
-    data.insert("is_logged_in", &identity.identity().is_some());
-    data.insert("messages", &Vec::<Message>::new());
+    let mut context = Context::new();
+    context.insert("is_logged_in", &identity.identity().is_some());
+    context.insert("messages", &Vec::<Message>::new());
 
     if let Some(mut messages_cookie) = req.cookie("messages") {
         if let Ok(messages) =
             serde_json::from_str::<Vec<Message>>(messages_cookie.value())
         {
-            data.insert("messages", &messages);
+            context.insert("messages", &messages);
             messages_cookie.set_value("");
             return HttpResponse::Ok()
                 .cookie(messages_cookie)
-                .body(tera.render("index.html", &data).unwrap());
+                .body(tera.render("index.html", &context).unwrap());
         }
     }
 
@@ -70,19 +70,19 @@ async fn login(
         return HttpResponse::Found().header("location", "/").finish();
     }
 
-    let mut data = Context::new();
-    data.insert("is_logged_in", &identity.identity().is_some());
-    data.insert("messages", &Vec::<Message>::new());
+    let mut context = Context::new();
+    context.insert("is_logged_in", &identity.identity().is_some());
+    context.insert("messages", &Vec::<Message>::new());
 
     if let Some(mut messages_cookie) = req.cookie("messages") {
         if let Ok(messages) =
             serde_json::from_str::<Vec<Message>>(messages_cookie.value())
         {
-            data.insert("messages", &messages);
+            context.insert("messages", &messages);
             messages_cookie.set_value("");
             return HttpResponse::Ok()
                 .cookie(messages_cookie)
-                .body(tera.render("login.html", &data).unwrap());
+                .body(tera.render("login.html", &context).unwrap());
         }
     }
 
@@ -195,19 +195,19 @@ async fn signup(
         return HttpResponse::Found().header("location", "/").finish();
     }
 
-    let mut data = Context::new();
-    data.insert("is_logged_in", &identity.identity().is_some());
-    data.insert("messages", &Vec::<Message>::new());
+    let mut context = Context::new();
+    context.insert("is_logged_in", &identity.identity().is_some());
+    context.insert("messages", &Vec::<Message>::new());
 
     if let Some(mut messages_cookie) = req.cookie("messages") {
         if let Ok(messages) =
             serde_json::from_str::<Vec<Message>>(messages_cookie.value())
         {
-            data.insert("messages", &messages);
+            context.insert("messages", &messages);
             messages_cookie.set_value("");
             return HttpResponse::Ok()
                 .cookie(messages_cookie)
-                .body(tera.render("signup.html", &data).unwrap());
+                .body(tera.render("signup.html", &context).unwrap());
         }
     }
 
@@ -315,23 +315,23 @@ async fn app(
         return HttpResponse::NotFound().finish();
     }
 
-    let mut data = Context::new();
-    data.insert("is_logged_in", &identity.identity().is_some());
-    data.insert("messages", &Vec::<Message>::new());
+    let mut context = Context::new();
+    context.insert("is_logged_in", &identity.identity().is_some());
+    context.insert("messages", &Vec::<Message>::new());
 
     if let Some(mut messages_cookie) = req.cookie("messages") {
         if let Ok(messages) =
             serde_json::from_str::<Vec<Message>>(messages_cookie.value())
         {
-            data.insert("messages", &messages);
+            context.insert("messages", &messages);
             messages_cookie.set_value("");
             return HttpResponse::Ok()
                 .cookie(messages_cookie)
-                .body(tera.render("app.html", &data).unwrap());
+                .body(tera.render("app.html", &context).unwrap());
         }
     }
 
-    HttpResponse::Ok().body(tera.render("app.html", &data).unwrap())
+    HttpResponse::Ok().body(tera.render("app.html", &context).unwrap())
 }
 
 #[actix_web::main]
