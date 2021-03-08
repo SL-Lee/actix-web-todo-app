@@ -45,7 +45,7 @@ pub fn create_response_for_template(
             serde_json::from_str::<Vec<Message>>(messages_cookie.value())
         {
             context.insert("messages", &messages);
-            messages_cookie.set_value("");
+            messages_cookie.set_value("[]");
             HttpResponse::Ok().cookie(messages_cookie).take()
         } else {
             HttpResponse::Ok()
@@ -55,17 +55,20 @@ pub fn create_response_for_template(
     }
 }
 
-pub fn create_message(
-    req: &HttpRequest,
-    message_category: String,
-    message_title: String,
-    message_content: String,
-) -> Cookie {
-    let mut messages_cookie = req.cookie("messages").unwrap_or(
+pub fn get_messages_cookie(req: &HttpRequest) -> Cookie {
+    req.cookie("messages").unwrap_or(
         Cookie::build("messages", "[]")
             .same_site(actix_web::cookie::SameSite::Lax)
             .finish(),
-    );
+    )
+}
+
+pub fn create_message(
+    messages_cookie: &mut Cookie,
+    message_category: String,
+    message_title: String,
+    message_content: String,
+) {
     let mut messages =
         serde_json::from_str::<Vec<Message>>(messages_cookie.value())
             .unwrap_or(vec![]);
@@ -75,5 +78,4 @@ pub fn create_message(
         content: message_content,
     });
     messages_cookie.set_value(serde_json::to_string(&messages).unwrap());
-    messages_cookie
 }

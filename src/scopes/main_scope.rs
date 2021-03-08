@@ -10,6 +10,7 @@ use scrypt::{
     Scrypt,
 };
 use tera::Tera;
+use validator::Validate;
 
 use crate::{
     create_message, create_response_for_template,
@@ -18,7 +19,7 @@ use crate::{
         schema::user,
     },
     forms::{LoginForm, SignupForm},
-    initialize_context, DbConnectionPool,
+    get_messages_cookie, initialize_context, DbConnectionPool,
 };
 
 pub fn get_scope() -> Scope {
@@ -73,6 +74,30 @@ async fn process_login(
         return HttpResponse::Found().header("location", "/").finish();
     }
 
+    let mut messages_cookie = get_messages_cookie(&req);
+
+    if let Err(validation_errors) = form_data.validate() {
+        validation_errors.field_errors().iter().for_each(
+            |(_, &field_errors)| {
+                field_errors
+                    .iter()
+                    .filter_map(|error| error.message.as_ref())
+                    .for_each(|error_message| {
+                        create_message(
+                            &mut messages_cookie,
+                            "danger".to_string(),
+                            "Login unsuccessful".to_string(),
+                            error_message.to_string(),
+                        );
+                    });
+            },
+        );
+        return HttpResponse::Found()
+            .header("location", "/login")
+            .cookie(messages_cookie)
+            .finish();
+    }
+
     let db_connection =
         pool.get().expect("Couldn't get db connection from pool");
     let user = user::table
@@ -88,36 +113,43 @@ async fn process_login(
             {
                 Ok(_) => {
                     identity.remember(user.username.clone());
+                    create_message(
+                        &mut messages_cookie,
+                        "success".to_string(),
+                        "Login successful".to_string(),
+                        "Logged in successfully.".to_string(),
+                    );
                     HttpResponse::Found()
                         .header("location", "/app")
-                        .cookie(create_message(
-                            &req,
-                            "success".to_string(),
-                            "Login successful".to_string(),
-                            "Logged in successfully.".to_string(),
-                        ))
+                        .cookie(messages_cookie)
                         .finish()
                 }
-                Err(_) => HttpResponse::Found()
-                    .header("location", "/login")
-                    .cookie(create_message(
-                        &req,
+                Err(_) => {
+                    create_message(
+                        &mut messages_cookie,
                         "danger".to_string(),
                         "Login unsuccessful".to_string(),
                         "Incorrect username and/or password.".to_string(),
-                    ))
-                    .finish(),
+                    );
+                    HttpResponse::Found()
+                        .header("location", "/login")
+                        .cookie(messages_cookie)
+                        .finish()
+                }
             }
         }
-        Err(_) => HttpResponse::Found()
-            .header("location", "/login")
-            .cookie(create_message(
-                &req,
+        Err(_) => {
+            create_message(
+                &mut messages_cookie,
                 "danger".to_string(),
                 "Login unsuccessful".to_string(),
                 "Incorrect username and/or password.".to_string(),
-            ))
-            .finish(),
+            );
+            HttpResponse::Found()
+                .header("location", "/login")
+                .cookie(messages_cookie)
+                .finish()
+        }
     }
 }
 
@@ -147,6 +179,30 @@ async fn process_signup(
         return HttpResponse::Found().header("location", "/").finish();
     }
 
+    let mut messages_cookie = get_messages_cookie(&req);
+
+    if let Err(validation_errors) = form_data.validate() {
+        validation_errors.field_errors().iter().for_each(
+            |(_, &field_errors)| {
+                field_errors
+                    .iter()
+                    .filter_map(|error| error.message.as_ref())
+                    .for_each(|error_message| {
+                        create_message(
+                            &mut messages_cookie,
+                            "danger".to_string(),
+                            "Signup unsuccessful".to_string(),
+                            error_message.to_string(),
+                        );
+                    });
+            },
+        );
+        return HttpResponse::Found()
+            .header("location", "/signup")
+            .cookie(messages_cookie)
+            .finish();
+    }
+
     let password = form_data.password.as_bytes();
     let salt = SaltString::generate(&mut OsRng);
     let password_hash = Scrypt
@@ -170,27 +226,31 @@ async fn process_signup(
     {
         Ok(_) => {
             identity.remember(form_data.username.clone());
+            create_message(
+                &mut messages_cookie,
+                "success".to_string(),
+                "Signup successful".to_string(),
+                "Signed up in successfully.".to_string(),
+            );
             HttpResponse::Found()
                 .header("location", "/app")
-                .cookie(create_message(
-                    &req,
-                    "success".to_string(),
-                    "Signup successful".to_string(),
-                    "Signed up in successfully.".to_string(),
-                ))
+                .cookie(messages_cookie)
                 .finish()
         }
-        Err(_) => HttpResponse::Found()
-            .header("location", "/signup")
-            .cookie(create_message(
-                &req,
+        Err(_) => {
+            create_message(
+                &mut messages_cookie,
                 "danger".to_string(),
                 "Signup unsuccessful".to_string(),
                 "An account with this username already exists. Please try \
                 again with a different username."
                     .to_string(),
-            ))
-            .finish(),
+            );
+            HttpResponse::Found()
+                .header("location", "/signup")
+                .cookie(messages_cookie)
+                .finish()
+        }
     }
 }
 
