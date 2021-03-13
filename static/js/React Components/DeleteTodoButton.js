@@ -17,12 +17,17 @@ class DeleteTodoButton extends React.Component {
         "Are you sure you want to delete this to-do?"
       )
     );
-  }
+  };
 
   render() {
     return React.createElement(
       "a",
-      { class: "btn btn-danger", onClick: this.handleClick },
+      {
+        class: "dropdown-item",
+        style: { cursor: "pointer" },
+        onClick: this.handleClick,
+      },
+      React.createElement("i", { class: "mr-10 fas fa-trash" }, null),
       "Delete"
     );
   }

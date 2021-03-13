@@ -15,15 +15,15 @@ class EditTodoForm extends React.Component {
     this.props.editTodo(this.props.formId, this.props.todoId);
     this.props.hideModal(this.props.modalId);
     this.setState({ titleInput: "", contentsInput: "" });
-  }
+  };
 
   handleTitleChange = (e) => {
     this.setState({ titleInput: e.target.value });
-  }
+  };
 
   handleContentsChange = (e) => {
     this.setState({ contentsInput: e.target.value });
-  }
+  };
 
   render() {
     return React.createElement(

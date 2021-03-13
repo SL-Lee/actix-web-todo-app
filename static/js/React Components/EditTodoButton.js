@@ -25,12 +25,17 @@ class EditTodoButton extends React.Component {
         null
       )
     );
-  }
+  };
 
   render() {
     return React.createElement(
       "a",
-      { class: "btn btn-primary", onClick: this.handleClick },
+      {
+        class: "dropdown-item",
+        style: { cursor: "pointer" },
+        onClick: this.handleClick,
+      },
+      React.createElement("i", { class: "mr-10 fas fa-edit" }, null),
       "Edit"
     );
   }

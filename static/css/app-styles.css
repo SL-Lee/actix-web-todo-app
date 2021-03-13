@@ -1,0 +1,11 @@
+.dropdown.position-absolute {
+  top: 3rem;
+  right: 3rem;
+}
+
+@media screen and (max-width: 576px) {
+  .dropdown.position-absolute {
+    top: 2rem;
+    right: 2rem;
+  }
+}

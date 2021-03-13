@@ -21,13 +21,13 @@ class CreateTodoButton extends React.Component {
         null
       )
     );
-  }
+  };
 
   render() {
     return React.createElement(
       "a",
       { class: "btn btn-primary", onClick: this.handleClick },
-      React.createElement("i", { class: "fas fa-plus mr-5" }, null),
+      React.createElement("i", { class: "mr-10 fas fa-plus" }, null),
       "Create"
     );
   }
