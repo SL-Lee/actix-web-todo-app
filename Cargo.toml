@@ -1,6 +1,6 @@
 [package]
 name = "actix-web-todo-app"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["SL-Lee <45960387+SL-Lee@users.noreply.github.com>"]
 edition = "2018"
 
