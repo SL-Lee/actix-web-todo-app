@@ -2,10 +2,8 @@ use std::env;
 
 use actix_identity::{CookieIdentityPolicy, IdentityService};
 use actix_web::{App, HttpServer};
-use diesel::{
-    prelude::*,
-    r2d2::{self, ConnectionManager},
-};
+use diesel::prelude::*;
+use diesel::r2d2::{self, ConnectionManager};
 use dotenv::dotenv;
 use rand::Rng;
 use tera::Tera;
@@ -20,9 +18,7 @@ async fn main() -> std::io::Result<()> {
     let manager = ConnectionManager::<SqliteConnection>::new(
         env::var("DATABASE_URL").expect("DATABASE_URL must be set"),
     );
-    let pool = r2d2::Pool::builder()
-        .build(manager)
-        .expect("Failed to create pool");
+    let pool = r2d2::Pool::builder().build(manager).expect("Failed to create pool");
 
     HttpServer::new(move || {
         App::new()

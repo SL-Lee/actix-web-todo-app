@@ -3,10 +3,7 @@ use validator::Validate;
 
 #[derive(Debug, Deserialize, Validate)]
 pub struct LoginForm {
-    #[validate(length(
-        max = 32,
-        message = "Username must not be longer than 32 characters."
-    ))]
+    #[validate(length(max = 32, message = "Username must not be longer than 32 characters."))]
     pub username: String,
     #[validate(length(
         min = 8,
@@ -18,10 +15,7 @@ pub struct LoginForm {
 
 #[derive(Debug, Deserialize, Validate)]
 pub struct SignupForm {
-    #[validate(length(
-        max = 32,
-        message = "Username must not be longer than 32 characters."
-    ))]
+    #[validate(length(max = 32, message = "Username must not be longer than 32 characters."))]
     pub username: String,
     #[validate(length(
         min = 8,

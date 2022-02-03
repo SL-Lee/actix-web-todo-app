@@ -3,23 +3,17 @@ use actix_web::{get, post, web, HttpRequest, HttpResponse, Responder, Scope};
 use chrono::Utc;
 use diesel::prelude::*;
 use rand_core::OsRng;
-use scrypt::{
-    password_hash::{
-        PasswordHash, PasswordHasher, PasswordVerifier, SaltString,
-    },
-    Scrypt,
-};
+use scrypt::password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString};
+use scrypt::Scrypt;
 use tera::Tera;
 use validator::Validate;
 
+use crate::db::models::{NewUser, User};
+use crate::db::schema::user;
+use crate::forms::{LoginForm, SignupForm};
 use crate::{
-    create_message, create_response_for_template,
-    db::{
-        models::{NewUser, User},
-        schema::user,
-    },
-    forms::{LoginForm, SignupForm},
-    get_messages_cookie, initialize_context, DbConnectionPool,
+    create_message, create_response_for_template, get_messages_cookie, initialize_context,
+    DbConnectionPool,
 };
 
 pub fn get_scope() -> Scope {
@@ -34,11 +28,7 @@ pub fn get_scope() -> Scope {
 }
 
 #[get("/")]
-async fn index(
-    req: HttpRequest,
-    identity: Identity,
-    tera: web::Data<Tera>,
-) -> impl Responder {
+async fn index(req: HttpRequest, identity: Identity, tera: web::Data<Tera>) -> impl Responder {
     if identity.identity().is_some() {
         return HttpResponse::Found().header("location", "/app").finish();
     }
@@ -49,11 +39,7 @@ async fn index(
 }
 
 #[get("/login")]
-async fn login(
-    req: HttpRequest,
-    identity: Identity,
-    tera: web::Data<Tera>,
-) -> impl Responder {
+async fn login(req: HttpRequest, identity: Identity, tera: web::Data<Tera>) -> impl Responder {
     if identity.identity().is_some() {
         return HttpResponse::Found().header("location", "/").finish();
     }
@@ -77,40 +63,30 @@ async fn process_login(
     let mut messages_cookie = get_messages_cookie(&req);
 
     if let Err(validation_errors) = form_data.validate() {
-        validation_errors.field_errors().iter().for_each(
-            |(_, &field_errors)| {
-                field_errors
-                    .iter()
-                    .filter_map(|error| error.message.as_ref())
-                    .for_each(|error_message| {
-                        create_message(
-                            &mut messages_cookie,
-                            "danger".to_string(),
-                            "Login unsuccessful".to_string(),
-                            error_message.to_string(),
-                        );
-                    });
-            },
-        );
-        return HttpResponse::Found()
-            .header("location", "/login")
-            .cookie(messages_cookie)
-            .finish();
+        validation_errors.field_errors().iter().for_each(|(_, &field_errors)| {
+            field_errors.iter().filter_map(|error| error.message.as_ref()).for_each(
+                |error_message| {
+                    create_message(
+                        &mut messages_cookie,
+                        "danger".to_string(),
+                        "Login unsuccessful".to_string(),
+                        error_message.to_string(),
+                    );
+                },
+            );
+        });
+        return HttpResponse::Found().header("location", "/login").cookie(messages_cookie).finish();
     }
 
-    let db_connection =
-        pool.get().expect("Couldn't get db connection from pool");
-    let user = user::table
-        .filter(user::username.eq(&form_data.username))
-        .first::<User>(&db_connection);
+    let db_connection = pool.get().expect("Couldn't get db connection from pool");
+    let user =
+        user::table.filter(user::username.eq(&form_data.username)).first::<User>(&db_connection);
 
     match user {
         Ok(user) => {
             let parsed_hash = PasswordHash::new(&user.password_hash).unwrap();
 
-            match Scrypt
-                .verify_password(form_data.password.as_bytes(), &parsed_hash)
-            {
+            match Scrypt.verify_password(form_data.password.as_bytes(), &parsed_hash) {
                 Ok(_) => {
                     identity.remember(user.username.clone());
                     create_message(
@@ -145,20 +121,13 @@ async fn process_login(
                 "Login unsuccessful".to_string(),
                 "Incorrect username and/or password.".to_string(),
             );
-            HttpResponse::Found()
-                .header("location", "/login")
-                .cookie(messages_cookie)
-                .finish()
+            HttpResponse::Found().header("location", "/login").cookie(messages_cookie).finish()
         }
     }
 }
 
 #[get("/signup")]
-async fn signup(
-    req: HttpRequest,
-    identity: Identity,
-    tera: web::Data<Tera>,
-) -> impl Responder {
+async fn signup(req: HttpRequest, identity: Identity, tera: web::Data<Tera>) -> impl Responder {
     if identity.identity().is_some() {
         return HttpResponse::Found().header("location", "/").finish();
     }
@@ -182,21 +151,18 @@ async fn process_signup(
     let mut messages_cookie = get_messages_cookie(&req);
 
     if let Err(validation_errors) = form_data.validate() {
-        validation_errors.field_errors().iter().for_each(
-            |(_, &field_errors)| {
-                field_errors
-                    .iter()
-                    .filter_map(|error| error.message.as_ref())
-                    .for_each(|error_message| {
-                        create_message(
-                            &mut messages_cookie,
-                            "danger".to_string(),
-                            "Signup unsuccessful".to_string(),
-                            error_message.to_string(),
-                        );
-                    });
-            },
-        );
+        validation_errors.field_errors().iter().for_each(|(_, &field_errors)| {
+            field_errors.iter().filter_map(|error| error.message.as_ref()).for_each(
+                |error_message| {
+                    create_message(
+                        &mut messages_cookie,
+                        "danger".to_string(),
+                        "Signup unsuccessful".to_string(),
+                        error_message.to_string(),
+                    );
+                },
+            );
+        });
         return HttpResponse::Found()
             .header("location", "/signup")
             .cookie(messages_cookie)
@@ -205,22 +171,16 @@ async fn process_signup(
 
     let password = form_data.password.as_bytes();
     let salt = SaltString::generate(&mut OsRng);
-    let password_hash = Scrypt
-        .hash_password_simple(password, salt.as_ref())
-        .unwrap()
-        .to_string();
+    let password_hash = Scrypt.hash_password_simple(password, salt.as_ref()).unwrap().to_string();
     let new_user = NewUser {
         username: form_data.username.clone(),
         password_hash: password_hash.clone(),
         date_created: Some(Utc::now().naive_utc()),
     };
-    let db_connection =
-        pool.get().expect("Couldn't get db connection from pool");
+    let db_connection = pool.get().expect("Couldn't get db connection from pool");
 
     match web::block(move || {
-        diesel::insert_into(user::table)
-            .values(&new_user)
-            .execute(&db_connection)
+        diesel::insert_into(user::table).values(&new_user).execute(&db_connection)
     })
     .await
     {
@@ -232,10 +192,7 @@ async fn process_signup(
                 "Signup successful".to_string(),
                 "Signed up in successfully.".to_string(),
             );
-            HttpResponse::Found()
-                .header("location", "/app")
-                .cookie(messages_cookie)
-                .finish()
+            HttpResponse::Found().header("location", "/app").cookie(messages_cookie).finish()
         }
         Err(_) => {
             create_message(
@@ -246,10 +203,7 @@ async fn process_signup(
                 again with a different username."
                     .to_string(),
             );
-            HttpResponse::Found()
-                .header("location", "/signup")
-                .cookie(messages_cookie)
-                .finish()
+            HttpResponse::Found().header("location", "/signup").cookie(messages_cookie).finish()
         }
     }
 }
@@ -265,11 +219,7 @@ async fn logout(identity: Identity) -> impl Responder {
 }
 
 #[get("/app")]
-async fn app(
-    req: HttpRequest,
-    identity: Identity,
-    tera: web::Data<Tera>,
-) -> impl Responder {
+async fn app(req: HttpRequest, identity: Identity, tera: web::Data<Tera>) -> impl Responder {
     if identity.identity().is_none() {
         return HttpResponse::NotFound().finish();
     }

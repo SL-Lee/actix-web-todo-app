@@ -1,21 +1,15 @@
 use actix_identity::Identity;
-use actix_web::{
-    delete, get, patch, post, put, web, HttpResponse, Responder, Scope,
-};
+use actix_web::{delete, get, patch, post, put, web, HttpResponse, Responder, Scope};
 use diesel::prelude::*;
 use serde_json::json;
 
-use crate::{
-    db::{
-        models::{NewTodo, Todo, User},
-        schema::{todo, user},
-    },
-    forms::{
-        CreateTodoEndpointData, DeleteTodoEndpointData, UpdateTodoEndpointData,
-        UpdateTodoStatusEndpointData,
-    },
-    DbConnectionPool,
+use crate::db::models::{NewTodo, Todo, User};
+use crate::db::schema::{todo, user};
+use crate::forms::{
+    CreateTodoEndpointData, DeleteTodoEndpointData, UpdateTodoEndpointData,
+    UpdateTodoStatusEndpointData,
 };
+use crate::DbConnectionPool;
 
 pub fn get_scope() -> Scope {
     web::scope("/api")
@@ -36,8 +30,7 @@ async fn create_todo(
         return HttpResponse::Unauthorized().finish();
     }
 
-    let db_connection =
-        pool.get().expect("Couldn't get db connection from pool");
+    let db_connection = pool.get().expect("Couldn't get db connection from pool");
     let user_id = user::table
         .filter(user::username.eq(&identity.identity().unwrap()))
         .first::<User>(&db_connection)
@@ -49,27 +42,19 @@ async fn create_todo(
         completed: false,
         user_id: Some(user_id),
     };
-    web::block(move || {
-        diesel::insert_into(todo::table)
-            .values(&new_todo)
-            .execute(&db_connection)
-    })
-    .await
-    .unwrap();
+    web::block(move || diesel::insert_into(todo::table).values(&new_todo).execute(&db_connection))
+        .await
+        .unwrap();
     HttpResponse::Created().json(json!({"status": "Success"}))
 }
 
 #[get("/todos")]
-async fn get_todos(
-    pool: DbConnectionPool,
-    identity: Identity,
-) -> impl Responder {
+async fn get_todos(pool: DbConnectionPool, identity: Identity) -> impl Responder {
     if identity.identity().is_none() {
         return HttpResponse::Unauthorized().finish();
     }
 
-    let db_connection =
-        pool.get().expect("Couldn't get db connection from pool");
+    let db_connection = pool.get().expect("Couldn't get db connection from pool");
     let user_id = user::table
         .filter(user::username.eq(&identity.identity().unwrap()))
         .first::<User>(&db_connection)
@@ -92,8 +77,7 @@ async fn update_todo(
         return HttpResponse::Unauthorized().finish();
     }
 
-    let db_connection =
-        pool.get().expect("Couldn't get db connection from pool");
+    let db_connection = pool.get().expect("Couldn't get db connection from pool");
     web::block(move || {
         diesel::update(todo::table.filter(todo::id.eq(data.todo_id)))
             .set((
@@ -117,8 +101,7 @@ async fn update_todo_status(
         return HttpResponse::Unauthorized().finish();
     }
 
-    let db_connection =
-        pool.get().expect("Couldn't get db connection from pool");
+    let db_connection = pool.get().expect("Couldn't get db connection from pool");
     web::block(move || {
         diesel::update(todo::table.filter(todo::id.eq(data.todo_id)))
             .set(todo::completed.eq(data.todo_completed))
@@ -139,11 +122,9 @@ async fn delete_todo(
         return HttpResponse::Unauthorized().finish();
     }
 
-    let db_connection =
-        pool.get().expect("Couldn't get db connection from pool");
+    let db_connection = pool.get().expect("Couldn't get db connection from pool");
     web::block(move || {
-        diesel::delete(todo::table.filter(todo::id.eq(data.todo_id)))
-            .execute(&db_connection)
+        diesel::delete(todo::table.filter(todo::id.eq(data.todo_id))).execute(&db_connection)
     })
     .await
     .unwrap();

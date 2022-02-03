@@ -6,20 +6,16 @@ pub mod forms;
 pub mod scopes;
 
 use actix_identity::Identity;
-use actix_web::{
-    dev::HttpResponseBuilder, http::Cookie, web, HttpMessage, HttpRequest,
-    HttpResponse,
-};
-use diesel::{
-    r2d2::{self, ConnectionManager},
-    sqlite::SqliteConnection,
-};
+use actix_web::dev::HttpResponseBuilder;
+use actix_web::http::Cookie;
+use actix_web::{web, HttpMessage, HttpRequest, HttpResponse};
+use diesel::r2d2::{self, ConnectionManager};
+use diesel::sqlite::SqliteConnection;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tera::Context;
 
-pub type DbConnectionPool =
-    web::Data<r2d2::Pool<ConnectionManager<SqliteConnection>>>;
+pub type DbConnectionPool = web::Data<r2d2::Pool<ConnectionManager<SqliteConnection>>>;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Message {
@@ -49,8 +45,7 @@ pub fn create_response_for_template(
             // (and intend to write it back to the client).
             messages_cookie.set_same_site(actix_web::cookie::SameSite::Lax);
 
-            match serde_json::from_str::<Vec<Message>>(messages_cookie.value())
-            {
+            match serde_json::from_str::<Vec<Message>>(messages_cookie.value()) {
                 Ok(messages) => {
                     context.insert("messages", &messages);
                     messages_cookie.set_value("[]");
@@ -65,9 +60,7 @@ pub fn create_response_for_template(
 
 pub fn get_messages_cookie(req: &HttpRequest) -> Cookie {
     req.cookie("messages").map_or(
-        Cookie::build("messages", "[]")
-            .same_site(actix_web::cookie::SameSite::Lax)
-            .finish(),
+        Cookie::build("messages", "[]").same_site(actix_web::cookie::SameSite::Lax).finish(),
         |mut messages_cookie| {
             // For some reason, retrieving the cookie using `req.cookie` will
             // unset the retrieved cookie's `SameSite` attribute to `None`. To
@@ -87,8 +80,7 @@ pub fn create_message(
     message_content: String,
 ) {
     let mut messages =
-        serde_json::from_str::<Vec<Message>>(messages_cookie.value())
-            .unwrap_or(vec![]);
+        serde_json::from_str::<Vec<Message>>(messages_cookie.value()).unwrap_or_default();
     messages.push(Message {
         category: message_category,
         title: message_title,
