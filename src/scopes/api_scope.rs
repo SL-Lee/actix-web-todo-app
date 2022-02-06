@@ -78,13 +78,30 @@ async fn update_todo(
     }
 
     let db_connection = pool.get().expect("Couldn't get db connection from pool");
+    let user_id = user::table
+        .filter(user::username.eq(&identity.identity().unwrap()))
+        .first::<User>(&db_connection)
+        .unwrap()
+        .id;
+    let todo_user_id =
+        match todo::table.filter(todo::id.eq(data.todo_id)).first::<Todo>(&db_connection) {
+            Ok(todo) => todo.user_id.unwrap(),
+            Err(_) => return HttpResponse::Forbidden().finish(),
+        };
+
+    if user_id != todo_user_id {
+        return HttpResponse::Forbidden().finish();
+    }
+
     web::block(move || {
-        diesel::update(todo::table.filter(todo::id.eq(data.todo_id)))
-            .set((
-                todo::title.eq(data.todo_title.clone()),
-                todo::contents.eq(data.todo_contents.clone()),
-            ))
-            .execute(&db_connection)
+        diesel::update(
+            todo::table.filter(todo::id.eq(data.todo_id).and(todo::user_id.eq(Some(user_id)))),
+        )
+        .set((
+            todo::title.eq(data.todo_title.clone()),
+            todo::contents.eq(data.todo_contents.clone()),
+        ))
+        .execute(&db_connection)
     })
     .await
     .unwrap();
@@ -102,10 +119,27 @@ async fn update_todo_status(
     }
 
     let db_connection = pool.get().expect("Couldn't get db connection from pool");
+    let user_id = user::table
+        .filter(user::username.eq(&identity.identity().unwrap()))
+        .first::<User>(&db_connection)
+        .unwrap()
+        .id;
+    let todo_user_id =
+        match todo::table.filter(todo::id.eq(data.todo_id)).first::<Todo>(&db_connection) {
+            Ok(todo) => todo.user_id.unwrap(),
+            Err(_) => return HttpResponse::Forbidden().finish(),
+        };
+
+    if user_id != todo_user_id {
+        return HttpResponse::Forbidden().finish();
+    }
+
     web::block(move || {
-        diesel::update(todo::table.filter(todo::id.eq(data.todo_id)))
-            .set(todo::completed.eq(data.todo_completed))
-            .execute(&db_connection)
+        diesel::update(
+            todo::table.filter(todo::id.eq(data.todo_id).and(todo::user_id.eq(Some(user_id)))),
+        )
+        .set(todo::completed.eq(data.todo_completed))
+        .execute(&db_connection)
     })
     .await
     .unwrap();
@@ -123,8 +157,26 @@ async fn delete_todo(
     }
 
     let db_connection = pool.get().expect("Couldn't get db connection from pool");
+    let user_id = user::table
+        .filter(user::username.eq(&identity.identity().unwrap()))
+        .first::<User>(&db_connection)
+        .unwrap()
+        .id;
+    let todo_user_id =
+        match todo::table.filter(todo::id.eq(data.todo_id)).first::<Todo>(&db_connection) {
+            Ok(todo) => todo.user_id.unwrap(),
+            Err(_) => return HttpResponse::Forbidden().finish(),
+        };
+
+    if user_id != todo_user_id {
+        return HttpResponse::Forbidden().finish();
+    }
+
     web::block(move || {
-        diesel::delete(todo::table.filter(todo::id.eq(data.todo_id))).execute(&db_connection)
+        diesel::delete(
+            todo::table.filter(todo::id.eq(data.todo_id).and(todo::user_id.eq(Some(user_id)))),
+        )
+        .execute(&db_connection)
     })
     .await
     .unwrap();
