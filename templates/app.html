@@ -3,8 +3,9 @@
 {% block title %}My To-dos{% endblock %}
 {% block content %}
 <link rel="stylesheet" type="text/css" href="/static/css/app-styles.css" />
+<!-- Uncomment the next line when there are actually styles defined in a Svelte component, which
+  causes the bundle.css file to be generated under /static/bundle/. -->
+<!-- <link rel="stylesheet" type="text/css" href="/static/bundle/bundle.css" /> -->
 <div id="app-root"></div>
-<script src="/static/js/react.production.min.js"></script>
-<script src="/static/js/react-dom.production.min.js"></script>
-<script src="/static/js/app.js" type="module"></script>
-{% endblock%}
+<script src="/static/bundle/bundle.js" type="module"></script>
+{% endblock %}

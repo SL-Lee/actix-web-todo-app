@@ -9,5 +9,20 @@
 A simple todo web application written using the following technologies/frameworks:
 
 - **actix-web** as the backend framework
-- **React** as the JavaScript frontend framework
+- **Svelte** as the JavaScript frontend framework
 - **Halfmoon** as the CSS frontend framework
+
+## Setup
+
+To run the application, run the following commands:
+
+```powershell
+# Install the dependencies for Svelte
+npm install
+# Build the JavaScript bundle
+npm run build
+# Downloads and compiles the required dependencies and start the server
+cargo run --release
+```
+
+Then visit https://127.0.0.1:8080/ in your browser.

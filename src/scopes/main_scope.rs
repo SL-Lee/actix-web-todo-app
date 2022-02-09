@@ -199,8 +199,8 @@ async fn process_signup(
                 &mut messages_cookie,
                 "danger".to_string(),
                 "Signup unsuccessful".to_string(),
-                "An account with this username already exists. Please try \
-                again with a different username."
+                "An account with this username already exists. Please try again with a different \
+                username."
                     .to_string(),
             );
             HttpResponse::Found().header("location", "/signup").cookie(messages_cookie).finish()
