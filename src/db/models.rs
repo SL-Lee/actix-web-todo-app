@@ -6,9 +6,14 @@ use crate::db::schema::{todo, user};
 #[derive(Queryable, Serialize)]
 pub struct Todo {
     pub id: i32,
+
     pub title: String,
+
     pub contents: Option<String>,
+
     pub completed: bool,
+
+    #[serde(skip_serializing)]
     pub user_id: Option<i32>,
 }
 
