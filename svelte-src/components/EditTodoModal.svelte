@@ -22,6 +22,7 @@
           alertType: "alert-success",
           timeShown: 5000,
         });
+        modalComponent.hideModal();
       } else {
         halfmoon.initStickyAlert({
           title: "Error while editing to-do",
@@ -31,7 +32,6 @@
         });
       }
     });
-    modalComponent.hideModal();
   }
 </script>
 

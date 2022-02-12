@@ -18,6 +18,7 @@
           alertType: "alert-success",
           timeShown: 5000,
         });
+        modalComponent.hideModal();
       } else {
         halfmoon.initStickyAlert({
           title: "Error while creating to-do",
@@ -27,7 +28,6 @@
         });
       }
     });
-    modalComponent.hideModal();
   }
 </script>
 
