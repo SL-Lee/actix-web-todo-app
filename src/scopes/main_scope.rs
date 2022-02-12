@@ -1,10 +1,10 @@
 use actix_identity::Identity;
 use actix_web::{get, post, web, HttpRequest, HttpResponse, Responder, Scope};
+use argon2::password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString};
+use argon2::Argon2;
 use chrono::Utc;
 use diesel::prelude::*;
 use rand_core::OsRng;
-use scrypt::password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString};
-use scrypt::Scrypt;
 use tera::Tera;
 use validator::Validate;
 
@@ -86,7 +86,7 @@ async fn process_login(
         Ok(user) => {
             let parsed_hash = PasswordHash::new(&user.password_hash).unwrap();
 
-            match Scrypt.verify_password(form_data.password.as_bytes(), &parsed_hash) {
+            match Argon2::default().verify_password(form_data.password.as_bytes(), &parsed_hash) {
                 Ok(_) => {
                     identity.remember(user.username.clone());
                     create_message(
@@ -171,7 +171,7 @@ async fn process_signup(
 
     let password = form_data.password.as_bytes();
     let salt = SaltString::generate(&mut OsRng);
-    let password_hash = Scrypt.hash_password_simple(password, salt.as_ref()).unwrap().to_string();
+    let password_hash = Argon2::default().hash_password(password, &salt).unwrap().to_string();
     let new_user = NewUser {
         username: form_data.username.clone(),
         password_hash: password_hash.clone(),
