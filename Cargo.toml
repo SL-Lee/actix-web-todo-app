@@ -13,6 +13,7 @@ actix-web = "3.3.2"
 chrono = "0.4.19"
 diesel = { version = "1.4.5", features = ["chrono", "r2d2", "sqlite"] }
 dotenv = "0.15.0"
+env_logger = "0.9.0"
 libsqlite3-sys = { version = "0.9.1", features = ["bundled"] }
 rand = "0.8.3"
 rand_core = "0.6.2"

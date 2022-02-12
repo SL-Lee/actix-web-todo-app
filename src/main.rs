@@ -1,6 +1,7 @@
 use std::env;
 
 use actix_identity::{CookieIdentityPolicy, IdentityService};
+use actix_web::middleware::Logger;
 use actix_web::{App, HttpServer};
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager};
@@ -20,8 +21,11 @@ async fn main() -> std::io::Result<()> {
     );
     let pool = r2d2::Pool::builder().build(manager).expect("Failed to create pool");
 
+    env_logger::init();
+
     HttpServer::new(move || {
         App::new()
+            .wrap(Logger::new(r#"%a "%r" %s [%Ts]"#))
             .wrap(IdentityService::new(
                 CookieIdentityPolicy::new(&private_key)
                     .name("session")
