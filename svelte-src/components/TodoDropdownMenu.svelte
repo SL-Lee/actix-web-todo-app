@@ -14,7 +14,7 @@
   let fetchTodos = getContext("fetchTodos");
   const dispatch = createEventDispatcher();
 
-  function viewTodo() {
+  function showViewTodoModal() {
     dispatch("showmodal", { modal: ViewTodoModal, todo });
   }
 
@@ -33,11 +33,11 @@
     });
   }
 
-  function editTodo() {
+  function showEditTodoModal() {
     dispatch("showmodal", { modal: EditTodoModal, todo });
   }
 
-  function deleteTodo() {
+  function showDeleteTodoModal() {
     dispatch("showmodal", { modal: DeleteTodoModal, todo });
   }
 </script>
@@ -45,11 +45,11 @@
 <div class="dropdown position-absolute">
   <button class="btn" data-toggle="dropdown"><i class="fas fa-ellipsis-h" /></button>
   <div class="dropdown-menu dropdown-menu-right">
-    <DropdownItem iconClass="fa-eye" on:click={viewTodo}>View</DropdownItem>
+    <DropdownItem iconClass="fa-eye" on:click={showViewTodoModal}>View</DropdownItem>
     <DropdownItem iconClass="fa-{todo.completed ? 'times' : 'check'}" on:click={updateTodoStatus}>
       Mark {todo.completed ? "Incomplete" : "Complete"}
     </DropdownItem>
-    <DropdownItem iconClass="fa-edit" on:click={editTodo}>Edit</DropdownItem>
-    <DropdownItem iconClass="fa-trash" on:click={deleteTodo}>Delete</DropdownItem>
+    <DropdownItem iconClass="fa-edit" on:click={showEditTodoModal}>Edit</DropdownItem>
+    <DropdownItem iconClass="fa-trash" on:click={showDeleteTodoModal}>Delete</DropdownItem>
   </div>
 </div>
