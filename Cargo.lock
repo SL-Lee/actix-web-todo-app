@@ -299,7 +299,7 @@ dependencies = [
 
 [[package]]
 name = "actix-web-todo-app"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "actix-files",
  "actix-identity",
