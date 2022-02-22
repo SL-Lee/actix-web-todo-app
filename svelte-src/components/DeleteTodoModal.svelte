@@ -8,12 +8,14 @@
   export let todo;
 
   let modalComponent;
-  let fetchTodos = getContext("fetchTodos");
+  let todoStore = getContext("todoStore");
 
   function deleteTodo() {
     TodoApi.deleteTodo(todo.id).then((response) => {
-      if (response.status === "Success") {
-        fetchTodos();
+      if (response.status === "success") {
+        $todoStore = $todoStore.filter(
+          (existingTodo) => existingTodo.id !== response.deletedTodoId
+        );
         halfmoon.initStickyAlert({
           title: "To-do deleted",
           content: "To-do deleted successfully.",

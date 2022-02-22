@@ -1,22 +1,26 @@
 table! {
     todo (id) {
-        id -> Integer,
-        title -> Text,
-        contents -> Nullable<Text>,
+        id -> Uuid,
+        title -> Varchar,
+        contents -> Nullable<Varchar>,
         completed -> Bool,
-        user_id -> Nullable<Integer>,
+        date_created -> Timestamp,
+        user_id -> Uuid,
     }
 }
 
 table! {
     user (id) {
-        id -> Integer,
-        username -> Text,
-        password_hash -> Text,
-        date_created -> Nullable<Timestamp>,
+        id -> Uuid,
+        username -> Varchar,
+        password_hash -> Varchar,
+        date_created -> Timestamp,
     }
 }
 
 joinable!(todo -> user (user_id));
 
-allow_tables_to_appear_in_same_query!(todo, user);
+allow_tables_to_appear_in_same_query!(
+    todo,
+    user,
+);

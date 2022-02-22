@@ -9,13 +9,13 @@ use actix_identity::Identity;
 use actix_web::dev::HttpResponseBuilder;
 use actix_web::http::Cookie;
 use actix_web::{web, HttpMessage, HttpRequest, HttpResponse};
+use diesel::pg::PgConnection;
 use diesel::r2d2::{self, ConnectionManager};
-use diesel::sqlite::SqliteConnection;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tera::Context;
 
-pub type DbConnectionPool = web::Data<r2d2::Pool<ConnectionManager<SqliteConnection>>>;
+pub type DbConnectionPool = web::Data<r2d2::Pool<ConnectionManager<PgConnection>>>;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Message {

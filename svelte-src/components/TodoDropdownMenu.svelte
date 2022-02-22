@@ -11,7 +11,6 @@
   let todoStore = getContext("todoStore");
   let todoId = getContext("todoId");
   $: todo = $todoStore.find((todo) => todo.id === todoId);
-  let fetchTodos = getContext("fetchTodos");
   const dispatch = createEventDispatcher();
 
   function showViewTodoModal() {
@@ -20,8 +19,9 @@
 
   function updateTodoStatus() {
     TodoApi.updateTodoStatus(todoId, !todo.completed).then((response) => {
-      if (response.status === "Success") {
-        fetchTodos();
+      if (response.status === "success") {
+        let index = $todoStore.findIndex((existingTodo) => existingTodo.id === todoId);
+        $todoStore[index].completed = response.newTodoStatus;
       } else {
         halfmoon.initStickyAlert({
           title: "Error while updating to-do status",

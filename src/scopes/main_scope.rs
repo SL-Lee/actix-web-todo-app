@@ -175,7 +175,7 @@ async fn process_signup(
     let new_user = NewUser {
         username: form_data.username.clone(),
         password_hash: password_hash.clone(),
-        date_created: Some(Utc::now().naive_utc()),
+        date_created: Utc::now().naive_utc(),
     };
     let db_connection = pool.get().expect("Couldn't get db connection from pool");
 

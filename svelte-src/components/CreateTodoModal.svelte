@@ -6,12 +6,12 @@
   import TodoApi from "../todoApi";
 
   let modalComponent, createTodoForm, todoTitle, todoContents;
-  let fetchTodos = getContext("fetchTodos");
+  let todoStore = getContext("todoStore");
 
   function handleFormSubmit() {
     TodoApi.createTodo(todoTitle, todoContents).then((response) => {
-      if (response.status === "Success") {
-        fetchTodos();
+      if (response.status === "success") {
+        $todoStore = [...$todoStore, response.todo];
         halfmoon.initStickyAlert({
           title: "To-do created",
           content: "To-do created successfully.",
@@ -48,6 +48,7 @@
         id="todo-title-input"
         placeholder="To-do Title"
         required="required"
+        maxlength="100"
         bind:value={todoTitle}
       />
     </div>
@@ -57,6 +58,7 @@
         class="form-control"
         id="todo-contents-input"
         placeholder="To-do Contents"
+        maxlength="512"
         bind:value={todoContents}
       />
     </div>

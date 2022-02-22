@@ -8,14 +8,9 @@
   import TodoApi from "../todoApi";
 
   let todoStore = writable([]);
-
-  async function fetchTodos() {
-    $todoStore = await TodoApi.getTodos();
-  }
+  TodoApi.getTodos().then((todos) => ($todoStore = todos));
 
   setContext("todoStore", todoStore);
-  setContext("fetchTodos", fetchTodos);
-  fetchTodos();
 
   let modalComponent, inspectedTodo;
 

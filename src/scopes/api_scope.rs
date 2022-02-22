@@ -1,7 +1,9 @@
 use actix_identity::Identity;
 use actix_web::{delete, get, patch, post, put, web, HttpResponse, Responder, Scope};
+use chrono::Utc;
 use diesel::prelude::*;
 use serde_json::json;
+use validator::Validate;
 
 use crate::db::models::{NewTodo, Todo, User};
 use crate::db::schema::{todo, user};
@@ -30,6 +32,11 @@ async fn create_todo(
         return HttpResponse::Unauthorized().finish();
     }
 
+    if let Err(validation_errors) = data.validate() {
+        return HttpResponse::UnprocessableEntity()
+            .json(json!({"status": "error", "fieldErrors": validation_errors.field_errors()}));
+    }
+
     let db_connection = pool.get().expect("Couldn't get db connection from pool");
     let user_id = user::table
         .filter(user::username.eq(&identity.identity().unwrap()))
@@ -40,12 +47,19 @@ async fn create_todo(
         title: data.todo_title.clone(),
         contents: data.todo_contents.clone(),
         completed: false,
-        user_id: Some(user_id),
+        date_created: Utc::now().naive_utc(),
+        user_id,
     };
-    web::block(move || diesel::insert_into(todo::table).values(&new_todo).execute(&db_connection))
-        .await
-        .unwrap();
-    HttpResponse::Created().json(json!({"status": "Success"}))
+
+    let create_todo_result = web::block(move || {
+        diesel::insert_into(todo::table).values(&new_todo).get_result::<Todo>(&db_connection)
+    })
+    .await;
+
+    match create_todo_result {
+        Ok(todo) => HttpResponse::Created().json(json!({"status": "success", "todo": todo})),
+        Err(_) => HttpResponse::InternalServerError().finish(),
+    }
 }
 
 #[get("/todos")]
@@ -61,7 +75,8 @@ async fn get_todos(pool: DbConnectionPool, identity: Identity) -> impl Responder
         .unwrap()
         .id;
     let todos = todo::table
-        .filter(todo::user_id.eq(Some(user_id)))
+        .filter(todo::user_id.eq(user_id))
+        .order(todo::date_created)
         .get_results::<Todo>(&db_connection)
         .unwrap();
     HttpResponse::Ok().json(todos)
@@ -77,6 +92,11 @@ async fn update_todo(
         return HttpResponse::Unauthorized().finish();
     }
 
+    if let Err(validation_errors) = data.validate() {
+        return HttpResponse::UnprocessableEntity()
+            .json(json!({"status": "error", "fieldErrors": validation_errors.field_errors()}));
+    }
+
     let db_connection = pool.get().expect("Couldn't get db connection from pool");
     let user_id = user::table
         .filter(user::username.eq(&identity.identity().unwrap()))
@@ -85,7 +105,7 @@ async fn update_todo(
         .id;
     let todo_user_id =
         match todo::table.filter(todo::id.eq(data.todo_id)).first::<Todo>(&db_connection) {
-            Ok(todo) => todo.user_id.unwrap(),
+            Ok(todo) => todo.user_id,
             Err(_) => return HttpResponse::Forbidden().finish(),
         };
 
@@ -93,19 +113,20 @@ async fn update_todo(
         return HttpResponse::Forbidden().finish();
     }
 
-    web::block(move || {
-        diesel::update(
-            todo::table.filter(todo::id.eq(data.todo_id).and(todo::user_id.eq(Some(user_id)))),
-        )
-        .set((
-            todo::title.eq(data.todo_title.clone()),
-            todo::contents.eq(data.todo_contents.clone()),
-        ))
-        .execute(&db_connection)
+    let update_todo_result = web::block(move || {
+        diesel::update(todo::table.filter(todo::id.eq(data.todo_id).and(todo::user_id.eq(user_id))))
+            .set((
+                todo::title.eq(data.todo_title.clone()),
+                todo::contents.eq(data.todo_contents.clone()),
+            ))
+            .get_result::<Todo>(&db_connection)
     })
-    .await
-    .unwrap();
-    HttpResponse::Ok().json(json!({"status": "Success"}))
+    .await;
+
+    match update_todo_result {
+        Ok(todo) => HttpResponse::Ok().json(json!({"status": "success", "todo": todo})),
+        Err(_) => HttpResponse::InternalServerError().finish(),
+    }
 }
 
 #[patch("/todos")]
@@ -126,7 +147,7 @@ async fn update_todo_status(
         .id;
     let todo_user_id =
         match todo::table.filter(todo::id.eq(data.todo_id)).first::<Todo>(&db_connection) {
-            Ok(todo) => todo.user_id.unwrap(),
+            Ok(todo) => todo.user_id,
             Err(_) => return HttpResponse::Forbidden().finish(),
         };
 
@@ -134,16 +155,19 @@ async fn update_todo_status(
         return HttpResponse::Forbidden().finish();
     }
 
-    web::block(move || {
-        diesel::update(
-            todo::table.filter(todo::id.eq(data.todo_id).and(todo::user_id.eq(Some(user_id)))),
-        )
-        .set(todo::completed.eq(data.todo_completed))
-        .execute(&db_connection)
+    let update_todo_status_result = web::block(move || {
+        diesel::update(todo::table.filter(todo::id.eq(data.todo_id).and(todo::user_id.eq(user_id))))
+            .set(todo::completed.eq(data.todo_completed))
+            .get_result::<Todo>(&db_connection)
     })
-    .await
-    .unwrap();
-    HttpResponse::Ok().json(json!({"status": "Success"}))
+    .await;
+
+    match update_todo_status_result {
+        Ok(todo) => {
+            HttpResponse::Ok().json(json!({"status": "success", "newTodoStatus": todo.completed}))
+        }
+        Err(_) => HttpResponse::InternalServerError().finish(),
+    }
 }
 
 #[delete("/todos")]
@@ -164,7 +188,7 @@ async fn delete_todo(
         .id;
     let todo_user_id =
         match todo::table.filter(todo::id.eq(data.todo_id)).first::<Todo>(&db_connection) {
-            Ok(todo) => todo.user_id.unwrap(),
+            Ok(todo) => todo.user_id,
             Err(_) => return HttpResponse::Forbidden().finish(),
         };
 
@@ -172,13 +196,14 @@ async fn delete_todo(
         return HttpResponse::Forbidden().finish();
     }
 
-    web::block(move || {
-        diesel::delete(
-            todo::table.filter(todo::id.eq(data.todo_id).and(todo::user_id.eq(Some(user_id)))),
-        )
-        .execute(&db_connection)
+    let delete_todo_result = web::block(move || {
+        diesel::delete(todo::table.filter(todo::id.eq(data.todo_id).and(todo::user_id.eq(user_id))))
+            .get_result::<Todo>(&db_connection)
     })
-    .await
-    .unwrap();
-    HttpResponse::Ok().json(json!({"status": "Success"}))
+    .await;
+
+    match delete_todo_result {
+        Ok(todo) => HttpResponse::Ok().json(json!({"status": "success", "deletedTodoId": todo.id})),
+        Err(_) => HttpResponse::InternalServerError().finish(),
+    }
 }

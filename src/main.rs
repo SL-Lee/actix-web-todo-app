@@ -16,7 +16,7 @@ async fn main() -> std::io::Result<()> {
     let private_key = rand::thread_rng().gen::<[u8; 32]>();
 
     dotenv().ok();
-    let manager = ConnectionManager::<SqliteConnection>::new(
+    let manager = ConnectionManager::<PgConnection>::new(
         env::var("DATABASE_URL").expect("DATABASE_URL must be set"),
     );
     let pool = r2d2::Pool::builder().build(manager).expect("Failed to create pool");

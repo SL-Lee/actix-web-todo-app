@@ -10,12 +10,13 @@
   let modalComponent, editTodoForm;
   let todoTitle = todo.title;
   let todoContents = todo.contents;
-  let fetchTodos = getContext("fetchTodos");
+  let todoStore = getContext("todoStore");
 
   function handleFormSubmit() {
     TodoApi.editTodo(todo.id, todoTitle, todoContents).then((response) => {
-      if (response.status === "Success") {
-        fetchTodos();
+      if (response.status === "success") {
+        let index = $todoStore.findIndex((existingTodo) => existingTodo.id === todo.id);
+        $todoStore[index] = response.todo;
         halfmoon.initStickyAlert({
           title: "To-do edited",
           content: "To-do edited successfully.",
@@ -52,6 +53,7 @@
         id="todo-title-input"
         placeholder="To-do Title"
         required="required"
+        maxlength="100"
         bind:value={todoTitle}
       />
     </div>
@@ -61,6 +63,7 @@
         class="form-control"
         id="todo-contents-input"
         placeholder="To-do Contents"
+        maxlength="512"
         bind:value={todoContents}
       />
     </div>
