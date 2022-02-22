@@ -17,6 +17,8 @@ A simple todo web application written using the following technologies/framework
 To run the application, run the following commands:
 
 ```powershell
+# cd to the project root (assuming that it is located in the current directory)
+cd "actix-web-todo-app"
 # Install the dependencies for Svelte
 npm install
 # Build the JavaScript bundle
