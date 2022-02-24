@@ -85,7 +85,7 @@ Remove-Item "temp", $fileName -Recurse
 cargo run --release
 ```
 
-Once the server has started successfully, visit https://127.0.0.1:8080/ in your browser (you can customize the server URL by changing the value of the `SERVER_URL` environment variable in the `.env` file).
+Once the server has started successfully, visit http://127.0.0.1:8080/ in your browser (you can customize the server URL by changing the value of the `SERVER_URL` environment variable in the `.env` file).
 
 > **Note regarding the required library:**
 >
