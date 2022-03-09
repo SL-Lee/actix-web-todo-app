@@ -1,5 +1,6 @@
 use actix_identity::Identity;
-use actix_web::{get, post, web, HttpRequest, HttpResponse, Responder, Scope};
+use actix_web::web::{self, Data, Form};
+use actix_web::{get, post, HttpRequest, HttpResponse, Responder, Scope};
 use argon2::password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString};
 use argon2::Argon2;
 use chrono::Utc;
@@ -28,9 +29,9 @@ pub fn get_scope() -> Scope {
 }
 
 #[get("/")]
-async fn index(req: HttpRequest, identity: Identity, tera: web::Data<Tera>) -> impl Responder {
+async fn index(req: HttpRequest, identity: Identity, tera: Data<Tera>) -> impl Responder {
     if identity.identity().is_some() {
-        return HttpResponse::Found().header("location", "/app").finish();
+        return HttpResponse::Found().append_header(("location", "/app")).finish();
     }
 
     let mut context = initialize_context(&identity);
@@ -39,9 +40,9 @@ async fn index(req: HttpRequest, identity: Identity, tera: web::Data<Tera>) -> i
 }
 
 #[get("/login")]
-async fn login(req: HttpRequest, identity: Identity, tera: web::Data<Tera>) -> impl Responder {
+async fn login(req: HttpRequest, identity: Identity, tera: Data<Tera>) -> impl Responder {
     if identity.identity().is_some() {
-        return HttpResponse::Found().header("location", "/").finish();
+        return HttpResponse::Found().append_header(("location", "/")).finish();
     }
 
     let mut context = initialize_context(&identity);
@@ -54,10 +55,10 @@ async fn process_login(
     req: HttpRequest,
     pool: DbConnectionPool,
     identity: Identity,
-    form_data: web::Form<LoginForm>,
+    form_data: Form<LoginForm>,
 ) -> impl Responder {
     if identity.identity().is_some() {
-        return HttpResponse::Found().header("location", "/").finish();
+        return HttpResponse::Found().append_header(("location", "/")).finish();
     }
 
     let mut messages_cookie = get_messages_cookie(&req);
@@ -75,7 +76,10 @@ async fn process_login(
                 },
             );
         });
-        return HttpResponse::Found().header("location", "/login").cookie(messages_cookie).finish();
+        return HttpResponse::Found()
+            .append_header(("location", "/login"))
+            .cookie(messages_cookie)
+            .finish();
     }
 
     let db_connection = pool.get().expect("Couldn't get db connection from pool");
@@ -96,7 +100,7 @@ async fn process_login(
                         "Logged in successfully.".to_string(),
                     );
                     HttpResponse::Found()
-                        .header("location", "/app")
+                        .append_header(("location", "/app"))
                         .cookie(messages_cookie)
                         .finish()
                 }
@@ -108,7 +112,7 @@ async fn process_login(
                         "Incorrect username and/or password.".to_string(),
                     );
                     HttpResponse::Found()
-                        .header("location", "/login")
+                        .append_header(("location", "/login"))
                         .cookie(messages_cookie)
                         .finish()
                 }
@@ -121,15 +125,18 @@ async fn process_login(
                 "Login unsuccessful".to_string(),
                 "Incorrect username and/or password.".to_string(),
             );
-            HttpResponse::Found().header("location", "/login").cookie(messages_cookie).finish()
+            HttpResponse::Found()
+                .append_header(("location", "/login"))
+                .cookie(messages_cookie)
+                .finish()
         }
     }
 }
 
 #[get("/signup")]
-async fn signup(req: HttpRequest, identity: Identity, tera: web::Data<Tera>) -> impl Responder {
+async fn signup(req: HttpRequest, identity: Identity, tera: Data<Tera>) -> impl Responder {
     if identity.identity().is_some() {
-        return HttpResponse::Found().header("location", "/").finish();
+        return HttpResponse::Found().append_header(("location", "/")).finish();
     }
 
     let mut context = initialize_context(&identity);
@@ -142,10 +149,10 @@ async fn process_signup(
     req: HttpRequest,
     pool: DbConnectionPool,
     identity: Identity,
-    form_data: web::Form<SignupForm>,
+    form_data: Form<SignupForm>,
 ) -> impl Responder {
     if identity.identity().is_some() {
-        return HttpResponse::Found().header("location", "/").finish();
+        return HttpResponse::Found().append_header(("location", "/")).finish();
     }
 
     let mut messages_cookie = get_messages_cookie(&req);
@@ -164,7 +171,7 @@ async fn process_signup(
             );
         });
         return HttpResponse::Found()
-            .header("location", "/signup")
+            .append_header(("location", "/signup"))
             .cookie(messages_cookie)
             .finish();
     }
@@ -192,7 +199,10 @@ async fn process_signup(
                 "Signup successful".to_string(),
                 "Signed up in successfully.".to_string(),
             );
-            HttpResponse::Found().header("location", "/app").cookie(messages_cookie).finish()
+            HttpResponse::Found()
+                .append_header(("location", "/app"))
+                .cookie(messages_cookie)
+                .finish()
         }
         Err(_) => {
             create_message(
@@ -203,7 +213,10 @@ async fn process_signup(
                 username."
                     .to_string(),
             );
-            HttpResponse::Found().header("location", "/signup").cookie(messages_cookie).finish()
+            HttpResponse::Found()
+                .append_header(("location", "/signup"))
+                .cookie(messages_cookie)
+                .finish()
         }
     }
 }
@@ -215,11 +228,11 @@ async fn logout(identity: Identity) -> impl Responder {
     }
 
     identity.forget();
-    HttpResponse::Found().header("location", "/").finish()
+    HttpResponse::Found().append_header(("location", "/")).finish()
 }
 
 #[get("/app")]
-async fn app(req: HttpRequest, identity: Identity, tera: web::Data<Tera>) -> impl Responder {
+async fn app(req: HttpRequest, identity: Identity, tera: Data<Tera>) -> impl Responder {
     if identity.identity().is_none() {
         return HttpResponse::NotFound().finish();
     }

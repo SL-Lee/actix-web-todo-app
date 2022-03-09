@@ -6,9 +6,9 @@ pub mod forms;
 pub mod scopes;
 
 use actix_identity::Identity;
-use actix_web::dev::HttpResponseBuilder;
-use actix_web::http::Cookie;
-use actix_web::{web, HttpMessage, HttpRequest, HttpResponse};
+use actix_web::cookie::Cookie;
+use actix_web::HttpResponseBuilder;
+use actix_web::{web, HttpRequest, HttpResponse};
 use diesel::pg::PgConnection;
 use diesel::r2d2::{self, ConnectionManager};
 use serde::{Deserialize, Serialize};

@@ -1,5 +1,6 @@
 use actix_identity::Identity;
-use actix_web::{delete, get, patch, post, put, web, HttpResponse, Responder, Scope};
+use actix_web::web::{self, Form};
+use actix_web::{delete, get, patch, post, put, HttpResponse, Responder, Scope};
 use chrono::Utc;
 use diesel::prelude::*;
 use serde_json::json;
@@ -26,7 +27,7 @@ pub fn get_scope() -> Scope {
 async fn create_todo(
     pool: DbConnectionPool,
     identity: Identity,
-    data: web::Form<CreateTodoEndpointData>,
+    data: Form<CreateTodoEndpointData>,
 ) -> impl Responder {
     if identity.identity().is_none() {
         return HttpResponse::Unauthorized().finish();
@@ -56,9 +57,11 @@ async fn create_todo(
     })
     .await;
 
+    // There are two layers of results here -- the outer Result is the result of executing the
+    // blocking function, while the inner result is the Result returned by the blocking function.
     match create_todo_result {
-        Ok(todo) => HttpResponse::Created().json(json!({"status": "success", "todo": todo})),
-        Err(_) => HttpResponse::InternalServerError().finish(),
+        Ok(Ok(todo)) => HttpResponse::Created().json(json!({"status": "success", "todo": todo})),
+        _ => HttpResponse::InternalServerError().finish(),
     }
 }
 
@@ -86,7 +89,7 @@ async fn get_todos(pool: DbConnectionPool, identity: Identity) -> impl Responder
 async fn update_todo(
     pool: DbConnectionPool,
     identity: Identity,
-    data: web::Form<UpdateTodoEndpointData>,
+    data: Form<UpdateTodoEndpointData>,
 ) -> impl Responder {
     if identity.identity().is_none() {
         return HttpResponse::Unauthorized().finish();
@@ -123,9 +126,11 @@ async fn update_todo(
     })
     .await;
 
+    // There are two layers of results here -- the outer Result is the result of executing the
+    // blocking function, while the inner result is the Result returned by the blocking function.
     match update_todo_result {
-        Ok(todo) => HttpResponse::Ok().json(json!({"status": "success", "todo": todo})),
-        Err(_) => HttpResponse::InternalServerError().finish(),
+        Ok(Ok(todo)) => HttpResponse::Ok().json(json!({"status": "success", "todo": todo})),
+        _ => HttpResponse::InternalServerError().finish(),
     }
 }
 
@@ -133,7 +138,7 @@ async fn update_todo(
 async fn update_todo_status(
     pool: DbConnectionPool,
     identity: Identity,
-    data: web::Form<UpdateTodoStatusEndpointData>,
+    data: Form<UpdateTodoStatusEndpointData>,
 ) -> impl Responder {
     if identity.identity().is_none() {
         return HttpResponse::Unauthorized().finish();
@@ -162,11 +167,13 @@ async fn update_todo_status(
     })
     .await;
 
+    // There are two layers of results here -- the outer Result is the result of executing the
+    // blocking function, while the inner result is the Result returned by the blocking function.
     match update_todo_status_result {
-        Ok(todo) => {
+        Ok(Ok(todo)) => {
             HttpResponse::Ok().json(json!({"status": "success", "newTodoStatus": todo.completed}))
         }
-        Err(_) => HttpResponse::InternalServerError().finish(),
+        _ => HttpResponse::InternalServerError().finish(),
     }
 }
 
@@ -174,7 +181,7 @@ async fn update_todo_status(
 async fn delete_todo(
     pool: DbConnectionPool,
     identity: Identity,
-    data: web::Form<DeleteTodoEndpointData>,
+    data: Form<DeleteTodoEndpointData>,
 ) -> impl Responder {
     if identity.identity().is_none() {
         return HttpResponse::Unauthorized().finish();
@@ -202,8 +209,12 @@ async fn delete_todo(
     })
     .await;
 
+    // There are two layers of results here -- the outer Result is the result of executing the
+    // blocking function, while the inner result is the Result returned by the blocking function.
     match delete_todo_result {
-        Ok(todo) => HttpResponse::Ok().json(json!({"status": "success", "deletedTodoId": todo.id})),
-        Err(_) => HttpResponse::InternalServerError().finish(),
+        Ok(Ok(todo)) => {
+            HttpResponse::Ok().json(json!({"status": "success", "deletedTodoId": todo.id}))
+        }
+        _ => HttpResponse::InternalServerError().finish(),
     }
 }
