@@ -92,7 +92,7 @@ async fn process_login(
 
             match Argon2::default().verify_password(form_data.password.as_bytes(), &parsed_hash) {
                 Ok(_) => {
-                    identity.remember(user.username.clone());
+                    identity.remember(user.id.to_string());
                     create_message(
                         &mut messages_cookie,
                         "success".to_string(),
@@ -187,12 +187,12 @@ async fn process_signup(
     let db_connection = pool.get().expect("Couldn't get db connection from pool");
 
     match web::block(move || {
-        diesel::insert_into(user::table).values(&new_user).execute(&db_connection)
+        diesel::insert_into(user::table).values(&new_user).get_result::<User>(&db_connection)
     })
     .await
     {
-        Ok(_) => {
-            identity.remember(form_data.username.clone());
+        Ok(Ok(new_user)) => {
+            identity.remember(new_user.id.to_string());
             create_message(
                 &mut messages_cookie,
                 "success".to_string(),
@@ -204,7 +204,7 @@ async fn process_signup(
                 .cookie(messages_cookie)
                 .finish()
         }
-        Err(_) => {
+        _ => {
             create_message(
                 &mut messages_cookie,
                 "danger".to_string(),

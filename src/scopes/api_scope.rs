@@ -4,10 +4,11 @@ use actix_web::{delete, get, patch, post, put, HttpResponse, Responder, Scope};
 use chrono::Utc;
 use diesel::prelude::*;
 use serde_json::json;
+use uuid::Uuid;
 use validator::Validate;
 
-use crate::db::models::{NewTodo, Todo, User};
-use crate::db::schema::{todo, user};
+use crate::db::models::{NewTodo, Todo};
+use crate::db::schema::todo;
 use crate::forms::{
     CreateTodoEndpointData, DeleteTodoEndpointData, UpdateTodoEndpointData,
     UpdateTodoStatusEndpointData,
@@ -29,9 +30,13 @@ async fn create_todo(
     identity: Identity,
     data: Form<CreateTodoEndpointData>,
 ) -> impl Responder {
-    if identity.identity().is_none() {
-        return HttpResponse::Unauthorized().finish();
-    }
+    let user_id = match identity.identity() {
+        Some(user_id_str) => match Uuid::parse_str(&user_id_str) {
+            Ok(user_id) => user_id,
+            Err(_) => return HttpResponse::BadRequest().finish(),
+        },
+        None => return HttpResponse::Unauthorized().finish(),
+    };
 
     if let Err(validation_errors) = data.validate() {
         return HttpResponse::UnprocessableEntity()
@@ -39,11 +44,6 @@ async fn create_todo(
     }
 
     let db_connection = pool.get().expect("Couldn't get db connection from pool");
-    let user_id = user::table
-        .filter(user::username.eq(&identity.identity().unwrap()))
-        .first::<User>(&db_connection)
-        .unwrap()
-        .id;
     let new_todo = NewTodo {
         title: data.todo_title.clone(),
         contents: data.todo_contents.clone(),
@@ -51,7 +51,6 @@ async fn create_todo(
         date_created: Utc::now().naive_utc(),
         user_id,
     };
-
     let create_todo_result = web::block(move || {
         diesel::insert_into(todo::table).values(&new_todo).get_result::<Todo>(&db_connection)
     })
@@ -67,16 +66,14 @@ async fn create_todo(
 
 #[get("/todos")]
 async fn get_todos(pool: DbConnectionPool, identity: Identity) -> impl Responder {
-    if identity.identity().is_none() {
-        return HttpResponse::Unauthorized().finish();
-    }
-
+    let user_id = match identity.identity() {
+        Some(user_id_str) => match Uuid::parse_str(&user_id_str) {
+            Ok(user_id) => user_id,
+            Err(_) => return HttpResponse::BadRequest().finish(),
+        },
+        None => return HttpResponse::Unauthorized().finish(),
+    };
     let db_connection = pool.get().expect("Couldn't get db connection from pool");
-    let user_id = user::table
-        .filter(user::username.eq(&identity.identity().unwrap()))
-        .first::<User>(&db_connection)
-        .unwrap()
-        .id;
     let todos = todo::table
         .filter(todo::user_id.eq(user_id))
         .order(todo::date_created)
@@ -91,9 +88,13 @@ async fn update_todo(
     identity: Identity,
     data: Form<UpdateTodoEndpointData>,
 ) -> impl Responder {
-    if identity.identity().is_none() {
-        return HttpResponse::Unauthorized().finish();
-    }
+    let user_id = match identity.identity() {
+        Some(user_id_str) => match Uuid::parse_str(&user_id_str) {
+            Ok(user_id) => user_id,
+            Err(_) => return HttpResponse::BadRequest().finish(),
+        },
+        None => return HttpResponse::Unauthorized().finish(),
+    };
 
     if let Err(validation_errors) = data.validate() {
         return HttpResponse::UnprocessableEntity()
@@ -101,11 +102,6 @@ async fn update_todo(
     }
 
     let db_connection = pool.get().expect("Couldn't get db connection from pool");
-    let user_id = user::table
-        .filter(user::username.eq(&identity.identity().unwrap()))
-        .first::<User>(&db_connection)
-        .unwrap()
-        .id;
     let todo_user_id =
         match todo::table.filter(todo::id.eq(data.todo_id)).first::<Todo>(&db_connection) {
             Ok(todo) => todo.user_id,
@@ -140,16 +136,15 @@ async fn update_todo_status(
     identity: Identity,
     data: Form<UpdateTodoStatusEndpointData>,
 ) -> impl Responder {
-    if identity.identity().is_none() {
-        return HttpResponse::Unauthorized().finish();
-    }
+    let user_id = match identity.identity() {
+        Some(user_id_str) => match Uuid::parse_str(&user_id_str) {
+            Ok(user_id) => user_id,
+            Err(_) => return HttpResponse::BadRequest().finish(),
+        },
+        None => return HttpResponse::Unauthorized().finish(),
+    };
 
     let db_connection = pool.get().expect("Couldn't get db connection from pool");
-    let user_id = user::table
-        .filter(user::username.eq(&identity.identity().unwrap()))
-        .first::<User>(&db_connection)
-        .unwrap()
-        .id;
     let todo_user_id =
         match todo::table.filter(todo::id.eq(data.todo_id)).first::<Todo>(&db_connection) {
             Ok(todo) => todo.user_id,
@@ -183,16 +178,15 @@ async fn delete_todo(
     identity: Identity,
     data: Form<DeleteTodoEndpointData>,
 ) -> impl Responder {
-    if identity.identity().is_none() {
-        return HttpResponse::Unauthorized().finish();
-    }
+    let user_id = match identity.identity() {
+        Some(user_id_str) => match Uuid::parse_str(&user_id_str) {
+            Ok(user_id) => user_id,
+            Err(_) => return HttpResponse::BadRequest().finish(),
+        },
+        None => return HttpResponse::Unauthorized().finish(),
+    };
 
     let db_connection = pool.get().expect("Couldn't get db connection from pool");
-    let user_id = user::table
-        .filter(user::username.eq(&identity.identity().unwrap()))
-        .first::<User>(&db_connection)
-        .unwrap()
-        .id;
     let todo_user_id =
         match todo::table.filter(todo::id.eq(data.todo_id)).first::<Todo>(&db_connection) {
             Ok(todo) => todo.user_id,
