@@ -13,7 +13,7 @@ use crate::db::models::{NewUser, User};
 use crate::db::schema::user;
 use crate::forms::{LoginForm, SignupForm};
 use crate::{
-    create_message, create_response_for_template, get_messages_cookie, initialize_context,
+    create_response_for_template, get_messages_cookie, initialize_context, CreateMessage,
     DbConnectionPool,
 };
 
@@ -67,12 +67,7 @@ async fn process_login(
         validation_errors.field_errors().iter().for_each(|(_, &field_errors)| {
             field_errors.iter().filter_map(|error| error.message.as_ref()).for_each(
                 |error_message| {
-                    create_message(
-                        &mut messages_cookie,
-                        "danger".to_string(),
-                        "Login unsuccessful".to_string(),
-                        error_message.to_string(),
-                    );
+                    messages_cookie.create_message("danger", "Login unsuccessful", error_message);
                 },
             );
         });
@@ -83,47 +78,45 @@ async fn process_login(
     }
 
     let db_connection = pool.get().expect("Couldn't get db connection from pool");
-    let user =
+    let get_user_result =
         user::table.filter(user::username.eq(&form_data.username)).first::<User>(&db_connection);
 
-    match user {
+    match get_user_result {
         Ok(user) => {
-            let parsed_hash = PasswordHash::new(&user.password_hash).unwrap();
-
-            match Argon2::default().verify_password(form_data.password.as_bytes(), &parsed_hash) {
-                Ok(_) => {
-                    let _ = Identity::login(&req.extensions(), user.id.to_string());
-                    create_message(
-                        &mut messages_cookie,
-                        "success".to_string(),
-                        "Login successful".to_string(),
-                        "Logged in successfully.".to_string(),
-                    );
-                    HttpResponse::Found()
-                        .append_header(("location", "/app"))
-                        .cookie(messages_cookie)
-                        .finish()
-                }
-                Err(_) => {
-                    create_message(
-                        &mut messages_cookie,
-                        "danger".to_string(),
-                        "Login unsuccessful".to_string(),
-                        "Incorrect username and/or password.".to_string(),
-                    );
-                    HttpResponse::Found()
-                        .append_header(("location", "/login"))
-                        .cookie(messages_cookie)
-                        .finish()
-                }
+            if Argon2::default()
+                .verify_password(
+                    form_data.password.as_bytes(),
+                    &PasswordHash::new(&user.password_hash).unwrap(),
+                )
+                .is_ok()
+            {
+                let _ = Identity::login(&req.extensions(), user.id.to_string());
+                messages_cookie.create_message(
+                    "success",
+                    "Login successful",
+                    "Logged in successfully.",
+                );
+                HttpResponse::Found()
+                    .append_header(("location", "/app"))
+                    .cookie(messages_cookie)
+                    .finish()
+            } else {
+                messages_cookie.create_message(
+                    "danger",
+                    "Login unsuccessful",
+                    "Incorrect username and/or password.",
+                );
+                HttpResponse::Found()
+                    .append_header(("location", "/login"))
+                    .cookie(messages_cookie)
+                    .finish()
             }
         }
         Err(_) => {
-            create_message(
-                &mut messages_cookie,
-                "danger".to_string(),
-                "Login unsuccessful".to_string(),
-                "Incorrect username and/or password.".to_string(),
+            messages_cookie.create_message(
+                "danger",
+                "Login unsuccessful",
+                "Incorrect username and/or password.",
             );
             HttpResponse::Found()
                 .append_header(("location", "/login"))
@@ -161,12 +154,7 @@ async fn process_signup(
         validation_errors.field_errors().iter().for_each(|(_, &field_errors)| {
             field_errors.iter().filter_map(|error| error.message.as_ref()).for_each(
                 |error_message| {
-                    create_message(
-                        &mut messages_cookie,
-                        "danger".to_string(),
-                        "Signup unsuccessful".to_string(),
-                        error_message.to_string(),
-                    );
+                    messages_cookie.create_message("danger", "Signup unsuccessful", error_message);
                 },
             );
         });
@@ -193,11 +181,10 @@ async fn process_signup(
     {
         Ok(Ok(new_user)) => {
             let _ = Identity::login(&req.extensions(), new_user.id.to_string());
-            create_message(
-                &mut messages_cookie,
-                "success".to_string(),
-                "Signup successful".to_string(),
-                "Signed up in successfully.".to_string(),
+            messages_cookie.create_message(
+                "success",
+                "Signup successful",
+                "Signed up successfully.",
             );
             HttpResponse::Found()
                 .append_header(("location", "/app"))
@@ -205,13 +192,11 @@ async fn process_signup(
                 .finish()
         }
         _ => {
-            create_message(
-                &mut messages_cookie,
-                "danger".to_string(),
-                "Signup unsuccessful".to_string(),
+            messages_cookie.create_message(
+                "danger",
+                "Signup unsuccessful",
                 "An account with this username already exists. Please try again with a different \
-                username."
-                    .to_string(),
+                username.",
             );
             HttpResponse::Found()
                 .append_header(("location", "/signup"))

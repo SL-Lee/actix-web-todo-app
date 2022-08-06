@@ -18,10 +18,22 @@ use tera::Context;
 pub type DbConnectionPool = web::Data<r2d2::Pool<ConnectionManager<PgConnection>>>;
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Message {
-    pub category: String,
-    pub title: String,
-    pub content: String,
+struct Message<'a> {
+    category: &'a str,
+    title: &'a str,
+    content: &'a str,
+}
+
+trait CreateMessage {
+    fn create_message(&mut self, category: &str, title: &str, content: &str);
+}
+
+impl CreateMessage for Cookie<'_> {
+    fn create_message(&mut self, category: &str, title: &str, content: &str) {
+        let mut messages = serde_json::from_str::<Vec<Message>>(self.value()).unwrap_or_default();
+        messages.push(Message { category, title, content });
+        self.set_value(serde_json::to_string(&messages).unwrap());
+    }
 }
 
 pub fn initialize_context(identity: Option<Identity>) -> Context {
@@ -69,20 +81,4 @@ pub fn get_messages_cookie(req: &HttpRequest) -> Cookie {
             messages_cookie
         },
     )
-}
-
-pub fn create_message(
-    messages_cookie: &mut Cookie,
-    message_category: String,
-    message_title: String,
-    message_content: String,
-) {
-    let mut messages =
-        serde_json::from_str::<Vec<Message>>(messages_cookie.value()).unwrap_or_default();
-    messages.push(Message {
-        category: message_category,
-        title: message_title,
-        content: message_content,
-    });
-    messages_cookie.set_value(serde_json::to_string(&messages).unwrap());
 }
