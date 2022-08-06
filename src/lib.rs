@@ -24,9 +24,9 @@ pub struct Message {
     pub content: String,
 }
 
-pub fn initialize_context(identity: &Identity) -> Context {
+pub fn initialize_context(identity: Option<Identity>) -> Context {
     Context::from_value(json!({
-        "is_logged_in": identity.identity().is_some(),
+        "is_logged_in": identity.is_some(),
         "messages": &Vec::<Message>::new()
     }))
     .unwrap()
@@ -38,11 +38,10 @@ pub fn create_response_for_template(
 ) -> HttpResponseBuilder {
     match req.cookie("messages") {
         Some(mut messages_cookie) => {
-            // For some reason, retrieving the cookie using `req.cookie` will
-            // unset the retrieved cookie's `SameSite` attribute to `None`. To
-            // preserve the SameSite attribute's value of `Lax`, we will have to
-            // re-set the cookie's SameSite attribute every time we retrieve it
-            // (and intend to write it back to the client).
+            // For some reason, retrieving the cookie using `req.cookie` will unset the retrieved
+            // cookie's `SameSite` attribute to `None`. To preserve the SameSite attribute's value
+            // of `Lax`, we will have to re-set the cookie's SameSite attribute every time we
+            // retrieve it (and intend to write it back to the client).
             messages_cookie.set_same_site(actix_web::cookie::SameSite::Lax);
 
             match serde_json::from_str::<Vec<Message>>(messages_cookie.value()) {
@@ -62,11 +61,10 @@ pub fn get_messages_cookie(req: &HttpRequest) -> Cookie {
     req.cookie("messages").map_or(
         Cookie::build("messages", "[]").same_site(actix_web::cookie::SameSite::Lax).finish(),
         |mut messages_cookie| {
-            // For some reason, retrieving the cookie using `req.cookie` will
-            // unset the retrieved cookie's `SameSite` attribute to `None`. To
-            // preserve the SameSite attribute's value of `Lax`, we will have to
-            // re-set the cookie's SameSite attribute every time we retrieve it
-            // (and intend to write it back to the client).
+            // For some reason, retrieving the cookie using `req.cookie` will unset the retrieved
+            // cookie's `SameSite` attribute to `None`. To preserve the SameSite attribute's value
+            // of `Lax`, we will have to re-set the cookie's SameSite attribute every time we
+            // retrieve it (and intend to write it back to the client).
             messages_cookie.set_same_site(actix_web::cookie::SameSite::Lax);
             messages_cookie
         },

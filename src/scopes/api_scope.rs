@@ -27,11 +27,11 @@ pub fn get_scope() -> Scope {
 #[post("/todos")]
 async fn create_todo(
     pool: DbConnectionPool,
-    identity: Identity,
+    identity: Option<Identity>,
     data: Form<CreateTodoEndpointData>,
 ) -> impl Responder {
-    let user_id = match identity.identity() {
-        Some(user_id_str) => match Uuid::parse_str(&user_id_str) {
+    let user_id = match identity {
+        Some(identity) => match Uuid::parse_str(&identity.id().unwrap()) {
             Ok(user_id) => user_id,
             Err(_) => return HttpResponse::BadRequest().finish(),
         },
@@ -65,9 +65,9 @@ async fn create_todo(
 }
 
 #[get("/todos")]
-async fn get_todos(pool: DbConnectionPool, identity: Identity) -> impl Responder {
-    let user_id = match identity.identity() {
-        Some(user_id_str) => match Uuid::parse_str(&user_id_str) {
+async fn get_todos(pool: DbConnectionPool, identity: Option<Identity>) -> impl Responder {
+    let user_id = match identity {
+        Some(identity) => match Uuid::parse_str(&identity.id().unwrap()) {
             Ok(user_id) => user_id,
             Err(_) => return HttpResponse::BadRequest().finish(),
         },
@@ -85,11 +85,11 @@ async fn get_todos(pool: DbConnectionPool, identity: Identity) -> impl Responder
 #[put("/todos")]
 async fn update_todo(
     pool: DbConnectionPool,
-    identity: Identity,
+    identity: Option<Identity>,
     data: Form<UpdateTodoEndpointData>,
 ) -> impl Responder {
-    let user_id = match identity.identity() {
-        Some(user_id_str) => match Uuid::parse_str(&user_id_str) {
+    let user_id = match identity {
+        Some(identity) => match Uuid::parse_str(&identity.id().unwrap()) {
             Ok(user_id) => user_id,
             Err(_) => return HttpResponse::BadRequest().finish(),
         },
@@ -133,11 +133,11 @@ async fn update_todo(
 #[patch("/todos")]
 async fn update_todo_status(
     pool: DbConnectionPool,
-    identity: Identity,
+    identity: Option<Identity>,
     data: Form<UpdateTodoStatusEndpointData>,
 ) -> impl Responder {
-    let user_id = match identity.identity() {
-        Some(user_id_str) => match Uuid::parse_str(&user_id_str) {
+    let user_id = match identity {
+        Some(identity) => match Uuid::parse_str(&identity.id().unwrap()) {
             Ok(user_id) => user_id,
             Err(_) => return HttpResponse::BadRequest().finish(),
         },
@@ -175,11 +175,11 @@ async fn update_todo_status(
 #[delete("/todos")]
 async fn delete_todo(
     pool: DbConnectionPool,
-    identity: Identity,
+    identity: Option<Identity>,
     data: Form<DeleteTodoEndpointData>,
 ) -> impl Responder {
-    let user_id = match identity.identity() {
-        Some(user_id_str) => match Uuid::parse_str(&user_id_str) {
+    let user_id = match identity {
+        Some(identity) => match Uuid::parse_str(&identity.id().unwrap()) {
             Ok(user_id) => user_id,
             Err(_) => return HttpResponse::BadRequest().finish(),
         },

@@ -1,6 +1,6 @@
 use actix_identity::Identity;
 use actix_web::web::{self, Data, Form};
-use actix_web::{get, post, HttpRequest, HttpResponse, Responder, Scope};
+use actix_web::{get, post, HttpMessage, HttpRequest, HttpResponse, Responder, Scope};
 use argon2::password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString};
 use argon2::Argon2;
 use chrono::Utc;
@@ -29,23 +29,23 @@ pub fn get_scope() -> Scope {
 }
 
 #[get("/")]
-async fn index(req: HttpRequest, identity: Identity, tera: Data<Tera>) -> impl Responder {
-    if identity.identity().is_some() {
+async fn index(req: HttpRequest, identity: Option<Identity>, tera: Data<Tera>) -> impl Responder {
+    if identity.is_some() {
         return HttpResponse::Found().append_header(("location", "/app")).finish();
     }
 
-    let mut context = initialize_context(&identity);
+    let mut context = initialize_context(identity);
     create_response_for_template(&req, &mut context)
         .body(tera.render("index.html", &context).unwrap())
 }
 
 #[get("/login")]
-async fn login(req: HttpRequest, identity: Identity, tera: Data<Tera>) -> impl Responder {
-    if identity.identity().is_some() {
+async fn login(req: HttpRequest, identity: Option<Identity>, tera: Data<Tera>) -> impl Responder {
+    if identity.is_some() {
         return HttpResponse::Found().append_header(("location", "/")).finish();
     }
 
-    let mut context = initialize_context(&identity);
+    let mut context = initialize_context(identity);
     create_response_for_template(&req, &mut context)
         .body(tera.render("login.html", &context).unwrap())
 }
@@ -54,10 +54,10 @@ async fn login(req: HttpRequest, identity: Identity, tera: Data<Tera>) -> impl R
 async fn process_login(
     req: HttpRequest,
     pool: DbConnectionPool,
-    identity: Identity,
+    identity: Option<Identity>,
     form_data: Form<LoginForm>,
 ) -> impl Responder {
-    if identity.identity().is_some() {
+    if identity.is_some() {
         return HttpResponse::Found().append_header(("location", "/")).finish();
     }
 
@@ -92,7 +92,7 @@ async fn process_login(
 
             match Argon2::default().verify_password(form_data.password.as_bytes(), &parsed_hash) {
                 Ok(_) => {
-                    identity.remember(user.id.to_string());
+                    let _ = Identity::login(&req.extensions(), user.id.to_string());
                     create_message(
                         &mut messages_cookie,
                         "success".to_string(),
@@ -134,12 +134,12 @@ async fn process_login(
 }
 
 #[get("/signup")]
-async fn signup(req: HttpRequest, identity: Identity, tera: Data<Tera>) -> impl Responder {
-    if identity.identity().is_some() {
+async fn signup(req: HttpRequest, identity: Option<Identity>, tera: Data<Tera>) -> impl Responder {
+    if identity.is_some() {
         return HttpResponse::Found().append_header(("location", "/")).finish();
     }
 
-    let mut context = initialize_context(&identity);
+    let mut context = initialize_context(identity);
     create_response_for_template(&req, &mut context)
         .body(tera.render("signup.html", &context).unwrap())
 }
@@ -148,10 +148,10 @@ async fn signup(req: HttpRequest, identity: Identity, tera: Data<Tera>) -> impl 
 async fn process_signup(
     req: HttpRequest,
     pool: DbConnectionPool,
-    identity: Identity,
+    identity: Option<Identity>,
     form_data: Form<SignupForm>,
 ) -> impl Responder {
-    if identity.identity().is_some() {
+    if identity.is_some() {
         return HttpResponse::Found().append_header(("location", "/")).finish();
     }
 
@@ -192,7 +192,7 @@ async fn process_signup(
     .await
     {
         Ok(Ok(new_user)) => {
-            identity.remember(new_user.id.to_string());
+            let _ = Identity::login(&req.extensions(), new_user.id.to_string());
             create_message(
                 &mut messages_cookie,
                 "success".to_string(),
@@ -222,22 +222,23 @@ async fn process_signup(
 }
 
 #[get("/logout")]
-async fn logout(identity: Identity) -> impl Responder {
-    if identity.identity().is_none() {
-        return HttpResponse::NotFound().finish();
+async fn logout(identity: Option<Identity>) -> impl Responder {
+    match identity {
+        Some(identity) => {
+            identity.logout();
+            HttpResponse::Found().append_header(("location", "/")).finish()
+        }
+        None => HttpResponse::NotFound().finish(),
     }
-
-    identity.forget();
-    HttpResponse::Found().append_header(("location", "/")).finish()
 }
 
 #[get("/app")]
-async fn app(req: HttpRequest, identity: Identity, tera: Data<Tera>) -> impl Responder {
-    if identity.identity().is_none() {
+async fn app(req: HttpRequest, identity: Option<Identity>, tera: Data<Tera>) -> impl Responder {
+    if identity.is_none() {
         return HttpResponse::NotFound().finish();
     }
 
-    let mut context = initialize_context(&identity);
+    let mut context = initialize_context(identity);
     create_response_for_template(&req, &mut context)
         .body(tera.render("app.html", &context).unwrap())
 }

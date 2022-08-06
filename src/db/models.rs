@@ -1,3 +1,5 @@
+#![allow(clippy::extra_unused_lifetimes)]
+
 use chrono::NaiveDateTime;
 use serde::Serialize;
 use uuid::Uuid;
