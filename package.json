@@ -1,6 +1,6 @@
 {
   "name": "actix-web-todo-app",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "private": true,
   "scripts": {
     "build": "rollup -c",
