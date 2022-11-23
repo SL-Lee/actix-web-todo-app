@@ -5,17 +5,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{% block title %}{% endblock %} | To-do</title>
-  <link rel="stylesheet" type="text/css"
-    href="/static/css/halfmoon-variables.min.css" />
-  <link rel="stylesheet" type="text/css" href="/static/css/inter.css" />
-  <link rel="stylesheet" type="text/css" href="/static/css/iosevka-fixed.css" />
+  <link rel="stylesheet" type="text/css" href="/static/css/halfmoon-variables.min.css" />
+  <link rel="stylesheet" type="text/css" href="/static/css/inter-display.css" />
+  <link rel="stylesheet" type="text/css" href="/static/css/iosevka-term-slab.css" />
   <link rel="stylesheet" type="text/css" href="/static/css/all.min.css" />
   <link rel="stylesheet" type="text/css" href="/static/css/styles.css" />
   <link rel="icon" type="image/png" href="/static/images/favicon.png" />
 </head>
 
-<body
-  class="dark-mode with-custom-webkit-scrollbars with-custom-css-scrollbars">
+<body class="dark-mode with-custom-webkit-scrollbars with-custom-css-scrollbars">
   <div id="modal-root"></div>
   <div class="page-wrapper with-navbar">
     <!-- Navbar -->
@@ -57,8 +55,7 @@
           </div>
         </div>
       </div>
-      <button class="btn btn-square ml-10 ml-md-auto" type="button"
-        onclick="toggleDarkMode()">
+      <button class="btn btn-square ml-10 ml-md-auto" type="button" onclick="toggleDarkMode()">
         <i id="toggle-dark-mode-button-icon" class="fas fa-sun"></i>
       </button>
     </nav>
@@ -67,8 +64,7 @@
     <div class="sticky-alerts">
       {% if messages %}
       {% for message in messages %}
-      <div class="alert alert-{{ message.category }}" role="alert"
-        id="alert-{{ loop.index }}">
+      <div class="alert alert-{{ message.category }}" role="alert" id="alert-{{ loop.index }}">
         <h4 class="alert-heading">{{ message.title }}</h4>
         {{ message.content }}
       </div>
