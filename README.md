@@ -1,10 +1,9 @@
 # actix-web-todo-app
+![](https://user-images.githubusercontent.com/45960387/203633174-4678efa6-6392-40a3-a068-8292963fe9bf.jpeg)
 
-![](https://user-images.githubusercontent.com/45960387/153210881-040bc9f6-3c56-4dba-9cf8-88d2d74fc63b.png)
+![](https://user-images.githubusercontent.com/45960387/203633229-3397ce8b-e517-4220-a38a-de36cfb13c62.jpeg)
 
-![](https://user-images.githubusercontent.com/45960387/153211051-0e538045-3019-46f0-afd4-ed4f998d632a.png)
-
-![](https://user-images.githubusercontent.com/45960387/153211103-905a79ab-5599-4d4b-b03a-878d8d9db85e.png)
+![](https://user-images.githubusercontent.com/45960387/203633263-dc6c7860-0923-4b34-90b2-a839c323c29a.jpeg)
 
 A simple todo web application written using the following technologies/frameworks:
 
@@ -16,7 +15,6 @@ A simple todo web application written using the following technologies/framework
 ## Setup
 
 ### Frontend
-
 Before running any of the commands below, make sure you are in the project root.
 
 ```powershell
@@ -28,7 +26,6 @@ npm run build
 ```
 
 ### Database
-
 Before running any of the commands below, make sure you are in the project root.
 
 ```powershell
@@ -65,7 +62,6 @@ diesel migration run
 >     The README of the `pq-sys` repository itself mentions that the first method of finding the libpq library is to check whether the `PQ_LIB_DIR` environment variable is set, and if so, it will use its value. For some reason, this is the only method that will work on Windows -- so if the `PQ_LIB_DIR` environment variable is not set, trying to compile `pq-sys` will fail with a linking error.
 
 ### Server
-
 Before running any of the commands below, make sure you are in the project root, and the `PQ_LIB_DIR` environment variable is set.
 
 ```powershell
