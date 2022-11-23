@@ -43,7 +43,7 @@ async fn create_todo(
             .json(json!({"status": "error", "fieldErrors": validation_errors.field_errors()}));
     }
 
-    let db_connection = pool.get().expect("Couldn't get db connection from pool");
+    let mut db_connection = pool.get().expect("Couldn't get db connection from pool");
     let new_todo = NewTodo {
         title: data.todo_title.clone(),
         contents: data.todo_contents.clone(),
@@ -52,7 +52,7 @@ async fn create_todo(
         user_id,
     };
     let create_todo_result = web::block(move || {
-        diesel::insert_into(todo::table).values(&new_todo).get_result::<Todo>(&db_connection)
+        diesel::insert_into(todo::table).values(&new_todo).get_result::<Todo>(&mut db_connection)
     })
     .await;
 
@@ -73,11 +73,11 @@ async fn get_todos(pool: DbConnectionPool, identity: Option<Identity>) -> impl R
         },
         None => return HttpResponse::Unauthorized().finish(),
     };
-    let db_connection = pool.get().expect("Couldn't get db connection from pool");
+    let mut db_connection = pool.get().expect("Couldn't get db connection from pool");
     let todos = todo::table
         .filter(todo::user_id.eq(user_id))
         .order(todo::date_created)
-        .get_results::<Todo>(&db_connection)
+        .get_results::<Todo>(&mut db_connection)
         .unwrap();
     HttpResponse::Ok().json(todos)
 }
@@ -101,9 +101,9 @@ async fn update_todo(
             .json(json!({"status": "error", "fieldErrors": validation_errors.field_errors()}));
     }
 
-    let db_connection = pool.get().expect("Couldn't get db connection from pool");
+    let mut db_connection = pool.get().expect("Couldn't get db connection from pool");
     let todo_user_id =
-        match todo::table.filter(todo::id.eq(data.todo_id)).first::<Todo>(&db_connection) {
+        match todo::table.filter(todo::id.eq(data.todo_id)).first::<Todo>(&mut db_connection) {
             Ok(todo) => todo.user_id,
             Err(_) => return HttpResponse::Forbidden().finish(),
         };
@@ -118,7 +118,7 @@ async fn update_todo(
                 todo::title.eq(data.todo_title.clone()),
                 todo::contents.eq(data.todo_contents.clone()),
             ))
-            .get_result::<Todo>(&db_connection)
+            .get_result::<Todo>(&mut db_connection)
     })
     .await;
 
@@ -144,9 +144,9 @@ async fn update_todo_status(
         None => return HttpResponse::Unauthorized().finish(),
     };
 
-    let db_connection = pool.get().expect("Couldn't get db connection from pool");
+    let mut db_connection = pool.get().expect("Couldn't get db connection from pool");
     let todo_user_id =
-        match todo::table.filter(todo::id.eq(data.todo_id)).first::<Todo>(&db_connection) {
+        match todo::table.filter(todo::id.eq(data.todo_id)).first::<Todo>(&mut db_connection) {
             Ok(todo) => todo.user_id,
             Err(_) => return HttpResponse::Forbidden().finish(),
         };
@@ -158,7 +158,7 @@ async fn update_todo_status(
     let update_todo_status_result = web::block(move || {
         diesel::update(todo::table.filter(todo::id.eq(data.todo_id).and(todo::user_id.eq(user_id))))
             .set(todo::completed.eq(data.todo_completed))
-            .get_result::<Todo>(&db_connection)
+            .get_result::<Todo>(&mut db_connection)
     })
     .await;
 
@@ -186,9 +186,9 @@ async fn delete_todo(
         None => return HttpResponse::Unauthorized().finish(),
     };
 
-    let db_connection = pool.get().expect("Couldn't get db connection from pool");
+    let mut db_connection = pool.get().expect("Couldn't get db connection from pool");
     let todo_user_id =
-        match todo::table.filter(todo::id.eq(data.todo_id)).first::<Todo>(&db_connection) {
+        match todo::table.filter(todo::id.eq(data.todo_id)).first::<Todo>(&mut db_connection) {
             Ok(todo) => todo.user_id,
             Err(_) => return HttpResponse::Forbidden().finish(),
         };
@@ -199,7 +199,7 @@ async fn delete_todo(
 
     let delete_todo_result = web::block(move || {
         diesel::delete(todo::table.filter(todo::id.eq(data.todo_id).and(todo::user_id.eq(user_id))))
-            .get_result::<Todo>(&db_connection)
+            .get_result::<Todo>(&mut db_connection)
     })
     .await;
 

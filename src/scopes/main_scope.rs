@@ -77,9 +77,10 @@ async fn process_login(
             .finish();
     }
 
-    let db_connection = pool.get().expect("Couldn't get db connection from pool");
-    let get_user_result =
-        user::table.filter(user::username.eq(&form_data.username)).first::<User>(&db_connection);
+    let mut db_connection = pool.get().expect("Couldn't get db connection from pool");
+    let get_user_result = user::table
+        .filter(user::username.eq(&form_data.username))
+        .first::<User>(&mut db_connection);
 
     match get_user_result {
         Ok(user) => {
@@ -172,10 +173,10 @@ async fn process_signup(
         password_hash: password_hash.clone(),
         date_created: Utc::now().naive_utc(),
     };
-    let db_connection = pool.get().expect("Couldn't get db connection from pool");
+    let mut db_connection = pool.get().expect("Couldn't get db connection from pool");
 
     match web::block(move || {
-        diesel::insert_into(user::table).values(&new_user).get_result::<User>(&db_connection)
+        diesel::insert_into(user::table).values(&new_user).get_result::<User>(&mut db_connection)
     })
     .await
     {

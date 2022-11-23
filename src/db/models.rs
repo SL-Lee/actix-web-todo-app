@@ -23,7 +23,7 @@ pub struct Todo {
 }
 
 #[derive(Insertable)]
-#[table_name = "todo"]
+#[diesel(table_name = todo)]
 pub struct NewTodo {
     pub title: String,
     pub contents: Option<String>,
@@ -41,7 +41,7 @@ pub struct User {
 }
 
 #[derive(Insertable)]
-#[table_name = "user"]
+#[diesel(table_name = user)]
 pub struct NewUser {
     pub username: String,
     pub password_hash: String,
