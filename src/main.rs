@@ -32,14 +32,14 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(move || {
         App::new()
-            .wrap(Logger::new(r#"%a "%r" %s [%Ts]"#))
-            .wrap(IdentityMiddleware::default())
-            .wrap(SessionMiddleware::new(CookieSessionStore::default(), private_key.clone()))
-            .app_data(Data::new(pool.clone()))
-            .app_data(Data::new(Tera::new("templates/**/*").unwrap()))
             .service(actix_files::Files::new("/static", "./static"))
             .service(api_scope::get_scope())
             .service(main_scope::get_scope())
+            .app_data(Data::new(pool.clone()))
+            .app_data(Data::new(Tera::new("templates/**/*").unwrap()))
+            .wrap(Logger::new(r#"%a "%r" %s [%Ts]"#))
+            .wrap(IdentityMiddleware::default())
+            .wrap(SessionMiddleware::new(CookieSessionStore::default(), private_key.clone()))
     })
     .bind(env::var("SERVER_URL").unwrap_or_else(|_| "127.0.0.1:8080".to_string()))?
     .run()

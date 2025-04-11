@@ -83,37 +83,26 @@ async fn process_login(
         .first::<User>(&mut db_connection);
 
     match get_user_result {
-        Ok(user) => {
+        Ok(user)
             if Argon2::default()
                 .verify_password(
                     form_data.password.as_bytes(),
                     &PasswordHash::new(&user.password_hash).unwrap(),
                 )
-                .is_ok()
-            {
-                let _ = Identity::login(&req.extensions(), user.id.to_string());
-                messages_cookie.create_message(
-                    "success",
-                    "Login successful",
-                    "Logged in successfully.",
-                );
-                HttpResponse::Found()
-                    .append_header(("location", "/app"))
-                    .cookie(messages_cookie)
-                    .finish()
-            } else {
-                messages_cookie.create_message(
-                    "danger",
-                    "Login unsuccessful",
-                    "Incorrect username and/or password.",
-                );
-                HttpResponse::Found()
-                    .append_header(("location", "/login"))
-                    .cookie(messages_cookie)
-                    .finish()
-            }
+                .is_ok() =>
+        {
+            let _ = Identity::login(&req.extensions(), user.id.to_string());
+            messages_cookie.create_message(
+                "success",
+                "Login successful",
+                "Logged in successfully.",
+            );
+            HttpResponse::Found()
+                .append_header(("location", "/app"))
+                .cookie(messages_cookie)
+                .finish()
         }
-        Err(_) => {
+        _ => {
             messages_cookie.create_message(
                 "danger",
                 "Login unsuccessful",
@@ -209,12 +198,11 @@ async fn process_signup(
 
 #[get("/logout")]
 async fn logout(identity: Option<Identity>) -> impl Responder {
-    match identity {
-        Some(identity) => {
-            identity.logout();
-            HttpResponse::Found().append_header(("location", "/")).finish()
-        }
-        None => HttpResponse::NotFound().finish(),
+    if let Some(identity) = identity {
+        identity.logout();
+        HttpResponse::Found().append_header(("location", "/")).finish()
+    } else {
+        HttpResponse::NotFound().finish()
     }
 }
 

@@ -3,6 +3,7 @@ extern crate diesel;
 
 pub mod db;
 pub mod forms;
+pub mod middleware;
 pub mod scopes;
 
 use actix_identity::Identity;
